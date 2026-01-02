@@ -9,6 +9,30 @@ export default function Home() {
         <h1 className="text-3xl font-bold text-foreground">React Form Handling Evolution</h1>
         <p className="text-muted-foreground">See how form handling evolved from React 17 → 18 → 19</p>
 
+        <div className="grid md:grid-cols-2 gap-4">
+          <Link
+            href="/classic"
+            className="block p-6 rounded-lg border-2 border-primary/50 bg-card hover:border-primary transition-colors"
+          >
+            <h2 className="font-semibold text-lg">📝 Form Demos</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Todo list examples showing the evolution of form handling patterns
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">Classic → Transition → Actions</p>
+          </Link>
+
+          <Link
+            href="/race"
+            className="block p-6 rounded-lg border-2 border-destructive/50 bg-card hover:border-destructive transition-colors"
+          >
+            <h2 className="font-semibold text-lg">🏎️ Race Condition Demos</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Click rapidly to see how each pattern handles concurrent requests
+            </p>
+            <p className="text-xs text-destructive mt-2">See the bugs in action!</p>
+          </Link>
+        </div>
+
         <div className="p-6 rounded-lg border bg-card space-y-4">
           <h2 className="text-xl font-semibold">Why This Evolution Matters</h2>
           <p className="text-muted-foreground leading-relaxed">
