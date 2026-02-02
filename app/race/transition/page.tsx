@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 // Fake API with random delay (200-800ms)
 async function fakeIncrement(currentValue: number): Promise<number> {
   const delay = Math.random() * 600 + 200 // 200-800ms
-  await new Promise((resolve) => setTimeout(resolve, delay))
+  await new Promise((resolve) => setTimeout(resolve, 500))
   return currentValue + 1
 }
 
