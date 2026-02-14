@@ -1,30 +1,38 @@
-# React form handling updates
+This App discusses the 3 patterns for handling async work in Next.js: Classic, Transition, and Actions. The explanations are mostly accurate, but there's a nuance regarding the progressive enhancement claim for the Actions pattern.
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+### 1. **Classic Pattern**Accurate
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/spatulatoms-projects/v0-react-form-handling-updates)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/hk9kJp9NhkU)
+- Correctly shows manual state management pain points
+- Race condition handling with cleanup is accurate
+- "No progressive enhancement" is correct
 
-## Overview
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+### 2. **Transition Pattern**Accurate
 
-## Deployment
+- `useTransition` does auto-track pending state
+- Transition interruption/race handling is correct
+- Still client-only, still needs preventDefault - accurate
 
-Your project is live at:
 
-**[https://vercel.com/spatulatoms-projects/v0-react-form-handling-updates](https://vercel.com/spatulatoms-projects/v0-react-form-handling-updates)**
+### 3. **Actions Pattern**️ Mostly correct, but...
 
-## Build your app
+**The progressive enhancement claim needs context:**
 
-Continue building your app on:
+The app says: *"Form works without JS. Try disabling JavaScript and submitting - it still works!"*
 
-**[https://v0.app/chat/hk9kJp9NhkU](https://v0.app/chat/hk9kJp9NhkU)**
+**Reality:** Only true if you use Next.js Server Actions properly. The current implementation uses a fake API (`fakeApi.addTodo`) which won't actually work without JS. For true progressive enhancement, you'd need:
 
-## How It Works
+```typescript
+// actions.ts
+"use server"
+export async function addTodoAction(formData: FormData) {
+  // This ACTUALLY runs on server, persists to DB
+  const todo = formData.get("todo")
+  await db.todos.insert({ text: todo })
+  revalidatePath("/actions")
+}
+```
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+**Current code analysis**: The `actions.ts` file simulates async work but doesn't persist anything. So the educational content is correct about what Actions *enable*, but the demo itself wouldn't survive a page refresh without a real database.
+
+**Bottom line**: The patterns explanation is pedagogically sound. Just note that for production progressive enhancement, you need actual server persistence, not simulated APIs.
