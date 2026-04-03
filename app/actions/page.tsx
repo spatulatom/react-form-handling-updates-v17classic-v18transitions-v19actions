@@ -122,6 +122,16 @@ export default async function ActionsPattern() {
             interactions.
           </p>
         </div>
+
+        {/* Navigation between patterns */}
+        <div className="flex gap-3 pt-8 border-t justify-between">
+          <Link href="/transition" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+            ← Transition Pattern
+          </Link>
+          <Link href="/" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+            Home
+          </Link>
+        </div>
       </div>
     </div>
   )

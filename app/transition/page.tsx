@@ -154,7 +154,15 @@ export default function TransitionPattern() {
             </li>
           ))}
         </ul>
-      </div>
+        {/* Navigation between patterns */}
+        <div className="flex gap-3 pt-8 border-t justify-between">
+          <Link href="/classic" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+            ← Classic Pattern
+          </Link>
+          <Link href="/actions" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            Actions Pattern →
+          </Link>
+        </div>      </div>
     </div>
   )
 }

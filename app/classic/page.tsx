@@ -189,6 +189,16 @@ export default function ClassicPattern() {
             introduced better primitives.
           </p>
         </div>
+
+        {/* Navigation between patterns */}
+        <div className="flex gap-3 pt-8 border-t justify-between">
+          <Link href="/" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+            ← Home
+          </Link>
+          <Link href="/transition" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            Transition Pattern →
+          </Link>
+        </div>
       </div>
     </div>
   )
