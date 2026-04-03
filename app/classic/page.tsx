@@ -190,6 +190,93 @@ export default function ClassicPattern() {
           </p>
         </div>
 
+        <div className="p-5 rounded-lg border bg-card space-y-4">
+          <h2 className="font-semibold">State Management Deep Dive</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium text-foreground text-sm mb-2">The Three State Groups</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Notice how states naturally divide into three categories:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1 mt-2 ml-4">
+                <li><strong>Fetching data:</strong> <code className="bg-muted px-1 rounded">todos</code>, <code className="bg-muted px-1 rounded">isLoading</code>, <code className="bg-muted px-1 rounded">error</code></li>
+                <li><strong>User input:</strong> <code className="bg-muted px-1 rounded">inputValue</code> (what user is typing)</li>
+                <li><strong>Submitting:</strong> <code className="bg-muted px-1 rounded">isSubmitting</code>, <code className="bg-muted px-1 rounded">submitError</code> (send to server)</li>
+              </ul>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+                Each async operation (fetch, submit, delete, edit) needs its own loading/error pair. This is why a real app with 5 async operations ends up with 10+ state variables just for status tracking.
+              </p>
+              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
+                <div><span className="text-blue-600">// GROUP 1: Fetching initial todos</span></div>
+                <div><span className="text-purple-600">const</span> [todos, setTodos] = <span className="text-orange-600">useState</span>([])        <span className="text-gray-500">// What comes back</span></div>
+                <div><span className="text-purple-600">const</span> [isLoading, setIsLoading] = <span className="text-orange-600">useState</span>(<span className="text-green-600">true</span>)</div>
+                <div><span className="text-purple-600">const</span> [error, setError] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)</div>
+                <div className="mt-2"><span className="text-blue-600">// GROUP 2: User typing</span></div>
+                <div><span className="text-purple-600">const</span> [inputValue, setInputValue] = <span className="text-orange-600">useState</span>(<span className="text-green-600">""</span>)  <span className="text-gray-500">// What we're typing</span></div>
+                <div className="mt-2"><span className="text-blue-600">// GROUP 3: Submitting form</span></div>
+                <div><span className="text-purple-600">const</span> [isSubmitting, setIsSubmitting] = <span className="text-orange-600">useState</span>(<span className="text-green-600">false</span>)</div>
+                <div><span className="text-purple-600">const</span> [submitError, setSubmitError] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)  <span className="text-gray-500">// Errors only</span></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-foreground text-sm mb-2">Success Messages: Implicit vs Explicit</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                This pattern shows <strong>implicit success</strong>: when you submit, the todo appears in the list and the input clears. The user sees success through data changes, not a message.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+                In real production apps, teams use different approaches:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2 mt-2 ml-4">
+                <li><strong>Error-only:</strong> No success notification, just show errors. Common for less critical actions.</li>
+                <li><strong>Toast notification:</strong> Brief "Success!" message (1-2 sec, auto-dismiss). Used on Twitter/YouTube.</li>
+                <li><strong>Explicit state:</strong> If you want a success message, add a separate state (<code className="bg-muted px-1 rounded">successMessage</code>) because controlling when to show and dismiss requires explicit tracking, not inference from HTTP status codes.</li>
+              </ul>
+              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
+                <div className="text-red-600">❌ Implicit (current approach)</div>
+                <div className="text-gray-500">// Success shown through data, not state</div>
+                <div><span className="text-purple-600">const</span> newTodo = <span className="text-orange-600">await</span> api.addTodo(input)</div>
+                <div><span className="text-orange-600">setTodos</span>(prev =&gt; [...prev, newTodo])  <span className="text-gray-500">// User sees it appear</span></div>
+                <div><span className="text-orange-600">setInputValue</span>(<span className="text-green-600">""</span>)  <span className="text-gray-500">// Empty field = success</span></div>
+                <div className="mt-2 text-green-600">✓ Explicit (if you want toast)</div>
+                <div className="text-gray-500">// Success tracked in state with auto-dismiss</div>
+                <div><span className="text-purple-600">const</span> [successMsg, setSuccessMsg] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)</div>
+                <div><span className="text-orange-600">setSuccessMsg</span>(<span className="text-green-600">"Todo added!"</span>)</div>
+                <div><span className="text-orange-600">setTimeout</span>(() =&gt; <span className="text-orange-600">setSuccessMsg</span>(<span className="text-green-600">null</span>), <span className="text-purple-600">2000</span>)</div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-foreground text-sm mb-2">Why Error States Exist (But Not Success States)</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Error messages need persistence because the user must acknowledge them or fix the problem. Success messages are ephemeral—they flash and disappear. That's why you see:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1 mt-2 ml-4">
+                <li>✓ <code className="bg-muted px-1 rounded">submitError</code> state variable → stays visible until user acts</li>
+                <li>✗ No <code className="bg-muted px-1 rounded">submitSuccess</code> state → success is shown through data changes (todo appears)</li>
+              </ul>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+                If you want explicit success feedback, you'd add state and a timer to auto-dismiss it—but the cleaner approach is letting the UI changes (data appearing, input clearing) speak for themselves.
+              </p>
+              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
+                <div className="text-green-600">✓ Error stays visible (needs state)</div>
+                <pre className="text-sm text-gray-300 overflow-x-auto">
+{`const [submitError, setSubmitError] = useState(null)
+{submitError && <div>{submitError}</div>}`}
+                </pre>
+                <div className="text-gray-500 mt-1">// Persists until user fixes and resubmits</div>
+                <div className="mt-2 text-orange-600">✗ Success disappears (no state needed)</div>
+                <div className="text-gray-500">// Just update the data, input clears, done!</div>
+                <pre className="text-sm text-gray-300 overflow-x-auto">
+{`setTodos(prev => [...prev, newTodo])
+setInputValue("")`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Navigation between patterns */}
         <div className="flex gap-3 pt-8 border-t justify-between">
           <Link href="/" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
