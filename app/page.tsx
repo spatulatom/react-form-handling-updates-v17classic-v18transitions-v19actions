@@ -137,6 +137,123 @@ export default function Home() {
             </div>
           </div>
         </div>
+      {/* Big Picture */}
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">The Big Picture</p>
+          <h2 className="text-xl font-semibold text-foreground">What This App Is — and What It Isn't</h2>
+        </div>
+
+        {/* What this app covers */}
+        <div className="p-6 rounded-lg border bg-card space-y-4">
+          <h3 className="font-semibold text-foreground">Part 1 (this app): Form Mutations + Native Foundations</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            This app covers one specific thread: <strong>how submitting data to a server has evolved</strong> — from
+            plain HTML forms in the pre-JavaScript web, through React 17's manual state management, React 18's
+            concurrent primitives, and React 19's Server Actions. The through-line is always the same operation:{" "}
+            <em>user wants to change data on the server; what does the code look like, and what can go wrong?</em>
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            The native GET demo (search params) was included because it's part of the same pre-JavaScript foundation —
+            it's the browser's other native form behavior alongside POST. It touches a different concept (URL as state
+            rather than mutation), but it was too historically important to skip when showing where everything started.
+            Consider it an honest preview of a second thread rather than a full treatment of it.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4 pt-2">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">✓ Covered here</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Native HTML POST → full-page mutation (PRG pattern)</li>
+                <li>• Native HTML GET → filtered read via query string</li>
+                <li>• React 17/18 classic: useState + useEffect mutations</li>
+                <li>• React 18: useTransition for non-blocking submissions</li>
+                <li>• React 19: Server Actions, useActionState, useFormStatus</li>
+                <li>• Race conditions in all three React patterns</li>
+                <li>• Progressive enhancement (works without JS)</li>
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-destructive uppercase tracking-wide">✗ Not covered (yet)</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Update and Delete operations (only Create is shown)</li>
+                <li>• Optimistic UI with useOptimistic (React 19)</li>
+                <li>• URL as state continued in React and Next.js</li>
+                <li>• Client-only UI state (modals, accordions, wizards)</li>
+                <li>• Real-time / push (WebSockets, Server-Sent Events)</li>
+                <li>• Authentication and session flows</li>
+                <li>• Pagination and infinite scroll</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Future: URL as state */}
+        <div className="p-6 rounded-lg border border-blue-500/20 bg-blue-500/5 space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="text-blue-500 text-lg mt-0.5">→</span>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-foreground">
+                Future Part 2: URL as State — the Search Params Thread
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                The native GET demo opened a door that this app doesn't walk through. URL as state is a first-class
+                pattern in modern web development: search/filter criteria, sort order, pagination, selected tab, open
+                modal — any UI state that should survive a refresh or be shareable in a link belongs in the URL.
+              </p>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                This thread has its own evolution. In plain React it means using{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">useSearchParams</code> (React Router / TanStack Router)
+                and carefully syncing URL ↔ component state without infinite loops. In Next.js App Router it means
+                understanding that <code className="bg-muted px-1 py-0.5 rounded">searchParams</code> is a server-side
+                prop, reading it in Server Components, and using{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">useSearchParams</code> on the client to avoid full-page
+                navigations. Libraries like <strong>nuqs</strong> emerged specifically to manage this complexity — type-safe
+                URL state with the same API as{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">useState</code>. A future section could trace exactly
+                this: native GET → React Router search params → Next.js App Router server searchParams → nuqs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Future: other threads */}
+        <div className="p-6 rounded-lg border border-muted bg-card space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="text-muted-foreground text-lg mt-0.5">→</span>
+            <div className="space-y-3 w-full">
+              <h3 className="font-semibold text-foreground">Future Parts 3+: The Rest of Dynamic Web Interactivity</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                CRUD mutations and URL state together cover only the <em>data layer</em> of a dynamic app — roughly
+                half the story. Two other large territories remain:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Client UI State</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Ephemeral state that never touches a server: open/closed panels, multi-step forms,
+                    drag-and-drop, theme. Its own evolution: local state → Context → Zustand/Redux → signals.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Real-time / Push</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Everything covered here is pull (user initiates). Push inverts that: the server notifies
+                    the client. WebSockets, Server-Sent Events, long polling, React's upcoming Activity API.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Optimistic UI</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Update the UI before the server confirms, then reconcile. React 19's{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">useOptimistic</code> is purpose-built for
+                    this — most meaningful for Update and Delete, which this app doesn't yet show.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       </div>
     </main>
   )
