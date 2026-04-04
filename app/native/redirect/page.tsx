@@ -13,8 +13,25 @@ export default function RedirectPage() {
         </p>
       </div>
 
+      {/* TOC */}
+      <div className="p-5 rounded-lg border bg-muted/30 space-y-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">On this page</p>
+        <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+          <li><a href="#what-happens" className="hover:text-foreground transition-colors">What actually happens in a redirect</a></li>
+          <li><a href="#method-preserved" className="hover:text-foreground transition-colors">What "method preserved" means</a></li>
+          <li><a href="#five-codes" className="hover:text-foreground transition-colors">The five redirect codes</a></li>
+          <li><a href="#get-forms" className="hover:text-foreground transition-colors">Why GET forms rarely involve redirects</a></li>
+          <li><a href="#apache-era" className="hover:text-foreground transition-colors">The Apache era — .htaccess and PHP</a></li>
+          <li><a href="#wordpress-era" className="hover:text-foreground transition-colors">The WordPress era</a></li>
+          <li><a href="#nextjs-layers" className="hover:text-foreground transition-colors">Next.js — redirects at every layer</a></li>
+          <li><a href="#rewrites" className="hover:text-foreground transition-colors">Redirects vs rewrites — history, WordPress, Next.js</a></li>
+          <li><a href="#does-layer-matter" className="hover:text-foreground transition-colors">Does the layer actually matter?</a></li>
+          <li><a href="#browser-safety" className="hover:text-foreground transition-colors">Can the browser refuse? Is it safe?</a></li>
+        </ol>
+      </div>
+
       {/* What is a redirect */}
-      <div className="p-6 rounded-lg border bg-card space-y-3">
+      <div id="what-happens" className="p-6 rounded-lg border bg-card space-y-3">
         <h3 className="font-semibold text-foreground">What Actually Happens in a Redirect</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           A redirect is just a server response with two things: a status code in the 300–399 range, and a{" "}
@@ -35,8 +52,7 @@ Content-Length: 0
         </p>
       </div>
 
-      {/* Method preserved explained */}
-      <div className="p-6 rounded-lg border bg-card space-y-4">
+      <div id="method-preserved" className="p-6 rounded-lg border bg-card space-y-4">
         <h3 className="font-semibold text-foreground">What "Method Preserved" Actually Means</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           Every redirect causes the browser to make a second HTTP request to a new URL. That second request needs a
@@ -79,8 +95,7 @@ Content-Length: 0
         </p>
       </div>
 
-      {/* Status code table */}
-      <div className="p-6 rounded-lg border bg-card space-y-4">
+      <div id="five-codes" className="p-6 rounded-lg border bg-card space-y-4">
         <h3 className="font-semibold text-foreground">The Five Redirect Codes</h3>
         <div className="rounded-lg border overflow-hidden text-xs">
           <table className="w-full">
@@ -140,8 +155,7 @@ Content-Length: 0
         </p>
       </div>
 
-      {/* Why GET forms don't need redirects */}
-      <div className="p-6 rounded-lg border bg-card space-y-3">
+      <div id="get-forms" className="p-6 rounded-lg border bg-card space-y-3">
         <h3 className="font-semibold text-foreground">Why GET Forms Rarely Involve Redirects</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           Your instinct is correct. A <code className="bg-muted px-1 py-0.5 rounded">method="GET"</code> form
@@ -161,8 +175,7 @@ Content-Length: 0
         </p>
       </div>
 
-      {/* Historical: Apache era */}
-      <div className="p-6 rounded-lg border bg-card space-y-3">
+      <div id="apache-era" className="p-6 rounded-lg border bg-card space-y-3">
         <h3 className="font-semibold text-foreground">The Apache Era — .htaccess and PHP</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           Before application frameworks, redirects were managed in two places: the web server config and the
@@ -205,8 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
 
-      {/* WordPress era */}
-      <div className="p-6 rounded-lg border bg-card space-y-3">
+      <div id="wordpress-era" className="p-6 rounded-lg border bg-card space-y-3">
         <h3 className="font-semibold text-foreground">The WordPress Era — Two Levels of Redirect</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           WordPress kept both levels. The{" "}
@@ -244,8 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
 
-      {/* Next.js levels */}
-      <div className="p-6 rounded-lg border bg-card space-y-4">
+      <div id="nextjs-layers" className="p-6 rounded-lg border bg-card space-y-4">
         <h3 className="font-semibold text-foreground">Next.js — Redirects at Every Layer</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           Next.js gives you six distinct places to redirect, from outermost (closest to the network) to innermost
@@ -363,8 +374,7 @@ export async function addTodo(formData: FormData) {
         </div>
       </div>
 
-      {/* Browser security */}
-      <div className="p-6 rounded-lg border bg-card space-y-3">
+      <div id="browser-safety" className="p-6 rounded-lg border bg-card space-y-3">
         <h3 className="font-semibold text-foreground">Can the Browser Refuse a Redirect? Is It Safe?</h3>
         <p className="text-muted-foreground text-sm leading-relaxed">
           <strong>No — the browser always follows HTTP redirects automatically.</strong> There is no prompt, no user
@@ -404,6 +414,283 @@ header('Location: ' . $_GET['next']);   // ← never trust user input here
             <li>• <code className="bg-muted px-1 rounded">next.config.js</code> redirects are safe — destinations are hardcoded in source</li>
             <li>• The POST demo is safe — destination is <code className="bg-muted px-1 rounded">new URL("/native/post?added=1", request.url)</code>, nothing from form input influences where you land</li>
           </ul>
+        </div>
+      </div>
+
+      <div id="does-layer-matter" className="p-6 rounded-lg border bg-card space-y-4">
+        <h3 className="font-semibold text-foreground">Does It Really Matter Which Layer You Use?</h3>
+
+        {/* Q1 */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Q: The browser gets the same 3xx either way — so is the choice of layer just a style preference?
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            No. The layer determines how much of your stack has to spin up before the redirect fires. At the hosting
+            layer (Vercel edge, nginx) the redirect is served from memory before your Node.js process is even woken
+            up. At the Server Component layer, Node.js starts, Next.js boots, the module graph loads, the page
+            function runs, and{" "}
+            <em>then</em> the redirect fires. Both produce an identical HTTP 3xx to the browser, but the server cost
+            is completely different.
+          </p>
+          <div className="rounded-lg border overflow-hidden text-xs">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-left px-3 py-2 font-semibold text-foreground">Layer</th>
+                  <th className="text-left px-3 py-2 font-semibold text-foreground">Work done before redirect fires</th>
+                  <th className="text-left px-3 py-2 font-semibold text-foreground">Old URL must exist as a page?</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border text-muted-foreground">
+                <tr>
+                  <td className="px-3 py-2">Hosting / CDN edge</td>
+                  <td className="px-3 py-2">Nothing — served from edge cache, Node.js never starts</td>
+                  <td className="px-3 py-2">No</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2"><code className="bg-muted px-1 rounded">next.config.js</code></td>
+                  <td className="px-3 py-2">Node.js starts, Next.js reads config, checks rules — no page loaded</td>
+                  <td className="px-3 py-2">No</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2">Middleware</td>
+                  <td className="px-3 py-2">Edge runtime starts, your middleware function runs</td>
+                  <td className="px-3 py-2">No</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2">Route Handler</td>
+                  <td className="px-3 py-2">Node.js, Next.js routing, your handler function, any DB calls you make</td>
+                  <td className="px-3 py-2">No — it's an API route, not a page</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2">Server Component</td>
+                  <td className="px-3 py-2">Full page render up to the point <code className="bg-muted px-1 rounded">redirect()</code> is called</td>
+                  <td className="px-3 py-2">Yes — the file must exist</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2">Server Action</td>
+                  <td className="px-3 py-2">Full request cycle including action logic, then soft nav on client</td>
+                  <td className="px-3 py-2">No separate page needed for the action itself</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Q2 */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Q: Does a higher-level redirect mean the source page doesn't need to exist or be maintained?
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Yes — and this is one of the most practically useful things about outer-layer redirects. For any layer
+            above Server Component, the old URL is just a string in a config file or database. The Next.js router
+            never tries to resolve it to a page file. You can redirect{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">/products/old-skus/12345</code> to{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">/shop/item/12345</code> in{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code> and there is nothing at{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">/products/old-skus/12345</code> — no file, no component,
+            nothing. The redirect fires before the router even tries to find a page. This is exactly what WordPress
+            redirect plugins do: they store old slugs in a database table; the page was deleted years ago, but any
+            request for it is caught early and redirected.
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            The Server Component layer is the one exception: because the redirect lives inside a{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">page.tsx</code>, the file must exist. This is appropriate
+            when the redirect is conditional — for example redirecting unauthenticated users away from a dashboard.
+            The page file exists; the redirect fires when a specific condition is true. For unconditional "this URL
+            moved permanently" redirects, a Server Component is the wrong layer — put it in{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code> where it's cheaper and the page
+            file is never needed.
+          </p>
+        </div>
+
+        {/* Q3 */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Q: So for permanent SEO redirects the right place is always <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code>?
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            For a small, known set of moved URLs — yes,{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code> is the right place. It's fast, the
+            old page doesn't need to exist, and the rules are version-controlled alongside your code.
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            For a large, dynamic set (a site migration with thousands of old URLs, or a CMS where editors create
+            redirects through a UI), you'd store redirect rules in a database and catch them in{" "}
+            <strong>Middleware</strong> — Middleware can query a fast store (Redis, KV) on every request without
+            the overhead of a full page render. This is the Next.js equivalent of the WordPress Redirection plugin:
+            dynamic rules, no page files required, intercepted before the router.
+          </p>
+        </div>
+
+        {/* Q4 */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Q: If the layer doesn't affect what the browser receives, does the user ever notice a difference?
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Rarely in normal circumstances, but yes in edge cases. A higher-layer redirect typically resolves in
+            single-digit milliseconds; a Server Component redirect might take 50–200ms because Node.js, the module
+            graph, and database connections all have to be ready first. On a slow server or cold start that gap is
+            more noticeable. More importantly: if the Server Component itself throws an error before reaching the{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">redirect()</code> call, the user sees an error page
+            instead of being redirected. A{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code> redirect has no page code to throw.
+          </p>
+        </div>
+      </div>
+
+      {/* Redirects vs Rewrites */}
+      <div id="rewrites" className="p-6 rounded-lg border bg-card space-y-4">
+        <h3 className="font-semibold text-foreground">Redirects vs Rewrites — History, WordPress, Next.js</h3>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          A redirect tells the browser <em>"go somewhere else"</em> — the URL in the address bar changes, the
+          browser makes a second request, the user can see the new path. A rewrite is completely different: the
+          server silently serves content from a different internal path while the URL in the address bar stays
+          unchanged. The browser has no idea a rewrite happened.
+        </p>
+
+        <div className="rounded-lg border overflow-hidden text-xs">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-muted/50 border-b">
+                <th className="text-left px-3 py-2 font-semibold text-foreground w-28"></th>
+                <th className="text-left px-3 py-2 font-semibold text-foreground">Redirect</th>
+                <th className="text-left px-3 py-2 font-semibold text-foreground">Rewrite</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border text-muted-foreground">
+              <tr>
+                <td className="px-3 py-2 font-medium text-foreground">URL bar changes?</td>
+                <td className="px-3 py-2">Yes — browser navigates to the new URL</td>
+                <td className="px-3 py-2">No — original URL stays visible</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 font-medium text-foreground">Browser requests</td>
+                <td className="px-3 py-2">Two: original + redirect destination</td>
+                <td className="px-3 py-2">One: browser only ever sees the original</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 font-medium text-foreground">Content served from</td>
+                <td className="px-3 py-2">Destination URL</td>
+                <td className="px-3 py-2">Internal path (hidden from browser)</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 font-medium text-foreground">Bookmarkable result</td>
+                <td className="px-3 py-2">Yes — the new URL is in history</td>
+                <td className="px-3 py-2">Yes — but it's the original URL, not the internal one</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 font-medium text-foreground">HTTP status</td>
+                <td className="px-3 py-2">3xx + <code className="bg-muted px-1 rounded">Location</code> header</td>
+                <td className="px-3 py-2">200 (or whatever the internal route returns)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Historical */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Historical — Apache mod_rewrite</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Rewrites became famous through Apache's <code className="bg-muted px-1 py-0.5 rounded">mod_rewrite</code>{" "}
+            module. Before PHP frameworks had routing, the only way to get clean URLs like{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">/products/shoes</code> instead of{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">/index.php?category=shoes</code> was to tell Apache to
+            silently rewrite the clean URL to the ugly one before PHP ran. The browser never knew. This is why
+            almost every PHP app of the 2000s shipped with a dense{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">.htaccess</code> file full of{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">RewriteRule</code> directives.
+          </p>
+          <pre className="text-xs text-foreground bg-muted rounded p-3 overflow-x-auto">{`# .htaccess — Apache rewrite (not a redirect)
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+# Browser requests /about → Apache secretly serves index.php?url=about
+# URL bar still shows /about, HTTP status is 200`}</pre>
+        </div>
+
+        {/* WordPress */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">WordPress</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            WordPress relies entirely on a rewrite to function. When you install WordPress, it writes a{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">RewriteRule</code> to{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">.htaccess</code> that sends every request that isn't a real
+            file or directory to{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">index.php</code>. WordPress then parses the URL itself and
+            decides what to render. When you change permalink settings in the admin panel, WordPress rewrites the{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">.htaccess</code> file. If that file is missing or
+            write-protected, your pretty URLs break and you get 404s — because without the rewrite, Apache looks
+            for actual files at those paths and finds nothing.
+          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Redirect plugins operate on top of this. The rewrite gets every request to{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">index.php</code>; then WordPress boots; then the plugin
+            checks its database of old slugs and issues a <em>redirect</em> (3xx) if there's a match. So you have
+            a rewrite just to run WordPress, and a redirect on top of it for URL management. Two distinct
+            mechanisms, often confused because they live in the same{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">.htaccess</code> file.
+          </p>
+        </div>
+
+        {/* Next.js */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Next.js</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Next.js has both, and they live side by side in{" "}
+            <code className="bg-muted px-1 py-0.5 rounded">next.config.js</code>:
+          </p>
+          <pre className="text-xs text-foreground bg-muted rounded p-3 overflow-x-auto">{`// next.config.js
+
+async redirects() {
+  return [
+    // Browser goes to /new-page, URL bar updates
+    { source: '/old-page', destination: '/new-page', permanent: true },
+  ]
+},
+
+async rewrites() {
+  return [
+    // Browser stays at /blog/hello, but Next.js serves /posts/hello
+    { source: '/blog/:slug', destination: '/posts/:slug' },
+
+    // Classic use: proxy an external API without exposing the real URL
+    { source: '/api/data', destination: 'https://internal-service.company.com/data' },
+  ]
+}`}</pre>
+          <div className="space-y-2 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground text-sm">The most common Next.js rewrite use cases:</p>
+            <ul className="space-y-2">
+              <li>
+                <strong className="text-foreground">Proxying external APIs.</strong>{" "}
+                If your page calls <code className="bg-muted px-1 rounded">/api/data</code>, you can rewrite that
+                to an internal microservice URL. The browser never sees the real backend address; CORS isn't an
+                issue because the request goes to your own origin.
+              </li>
+              <li>
+                <strong className="text-foreground">Vanity URLs over a CMS.</strong>{" "}
+                Show <code className="bg-muted px-1 rounded">/about</code> in the address bar but serve content
+                from <code className="bg-muted px-1 rounded">/cms/pages/about</code> internally. Same URL, different
+                internal route — no redirect round-trip.
+              </li>
+              <li>
+                <strong className="text-foreground">A/B testing or feature flags.</strong>{" "}
+                In Middleware, rewrite the same URL to{" "}
+                <code className="bg-muted px-1 rounded">/experiment-a/page</code> or{" "}
+                <code className="bg-muted px-1 rounded">/experiment-b/page</code> based on a cookie — user never
+                sees either internal path, URL stays clean.
+              </li>
+            </ul>
+          </div>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            The key distinction: use a <strong>redirect</strong> when the URL itself has changed and you want the
+            browser (and Google) to know about it. Use a <strong>rewrite</strong> when the URL is the right URL
+            for the user but you need to serve it from a different internal location — the change is an
+            implementation detail the browser shouldn't see.
+          </p>
         </div>
       </div>
 
