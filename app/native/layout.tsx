@@ -38,6 +38,12 @@ export default function NativeLayout({ children }: { children: React.ReactNode }
             >
               POST Form (PRG pattern)
             </Link>
+            <Link
+              href="/native/redirect"
+              className="px-4 py-2 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors"
+            >
+              Redirects (history &amp; Next.js)
+            </Link>
           </nav>
         </div>
       </header>
