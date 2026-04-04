@@ -21,12 +21,13 @@ const fakeApi = {
 }
 
 export default function ClassicPattern() {
-  // PROBLEM 1: Three separate states for one concern
+  // CRUD GROUP 1: Read state for the list
   const [todos, setTodos] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // PROBLEM 2: Submission needs its own loading/error states
+  // CRUD GROUP 2: Form state for what the user is typing
+  // CRUD GROUP 3: Submission state for request status
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -82,207 +83,348 @@ export default function ClassicPattern() {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6">
         <Link href="/" className="text-sm text-muted-foreground hover:underline">
           ← Back
         </Link>
 
-        <div>
+        <header className="space-y-2">
           <h1 className="text-2xl font-bold">Classic Pattern</h1>
           <p className="text-muted-foreground">useState + useEffect (React 17/18)</p>
-        </div>
+        </header>
 
-        <div className="p-5 rounded-lg border bg-card space-y-4">
-          <h2 className="font-semibold">How This Pattern Works</h2>
+        <div className="rounded-lg border bg-card p-5 space-y-3">
+          <h2 className="font-semibold">What to look for</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            This is the pattern most React developers learned first. You create separate
-            <code className="bg-muted px-1 rounded mx-1">useState</code> calls for your data, loading state, and error
-            state. Then you use <code className="bg-muted px-1 rounded mx-1">useEffect</code> to fetch data on mount,
-            and <code className="bg-muted px-1 rounded mx-1">onSubmit</code> handlers for form submissions.
+            The key idea in the classic model is that form state tends to fall into a few predictable buckets. Once
+            you can name those buckets, it becomes much easier to reason about whether a page is a simple contact
+            form or a full CRUD screen.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            <strong>The core issue:</strong> You're manually orchestrating the entire async lifecycle. Every async
-            operation needs its own loading/error tracking. You must remember to reset states at the right times, handle
-            cleanup for race conditions, and call <code className="bg-muted px-1 rounded mx-1">e.preventDefault()</code>
-            to stop the browser's native form behavior (which means the form breaks entirely without JavaScript).
+            This page starts with the simpler form case, then expands to CRUD, and then calls out the problems that
+            appear when you manage everything by hand.
           </p>
         </div>
 
-        {/* Problems highlighted */}
-        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm space-y-3">
-          <p className="font-semibold text-destructive">Problems with this pattern:</p>
-          <ul className="text-muted-foreground space-y-2">
-            <li>
-              <strong>1. Boilerplate explosion</strong> - Look at the code: 6 useState calls for one feature. Each async
-              operation (fetching, submitting) needs loading + error + data states. This multiplies quickly.
-            </li>
-            <li>
-              <strong>2. Race conditions</strong> - If the component unmounts while fetching, you'll try to setState on
-              an unmounted component. That's why we need the <code className="bg-muted px-1 rounded">cancelled</code>{" "}
-              flag and cleanup function. Easy to forget!
-            </li>
-            <li>
-              <strong>3. No progressive enhancement</strong> - The form uses{" "}
-              <code className="bg-muted px-1 rounded">e.preventDefault()</code>, so it does nothing if JS fails to load.
-              Users on slow connections or with JS disabled see a broken form.
-            </li>
-            <li>
-              <strong>4. State synchronization bugs</strong> - Did you remember to reset{" "}
-              <code className="bg-muted px-1 rounded">submitError</code>
-              before starting a new submission? These subtle bugs are common when you manage everything manually.
-            </li>
-            <li>
-              <strong>5. Loading state per action</strong> - <code className="bg-muted px-1 rounded">isLoading</code>{" "}
-              for fetch,
-              <code className="bg-muted px-1 rounded">isSubmitting</code> for submit. What if you add delete? Another
-              state. Edit? Another state.
-            </li>
-          </ul>
-        </div>
+        <section id="groups" className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">Define the Groups First</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Before looking at examples, it helps to define the three groups clearly. These are not React-specific
+              rules. They are just a useful way to organize the state that usually appears on forms and CRUD pages.
+            </p>
+            <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="font-medium text-foreground">Group 1: Read</p>
+                <p>State for data that comes from the server or some async source.</p>
+                <p>Examples: list data, loading flags, fetch errors.</p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="font-medium text-foreground">Group 2: Form State</p>
+                <p>State for what the user is currently typing or editing.</p>
+                <p>Examples: input values, field errors, client-side validation messages.</p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="font-medium text-foreground">Group 3: Submission State</p>
+                <p>State for the mutation itself while the request is running.</p>
+                <p>Examples: pending flags, submit errors, success messages.</p>
+              </div>
+            </div>
+            <div className="rounded-lg border bg-background p-4 text-sm text-muted-foreground space-y-3">
+              <p className="font-medium text-foreground">Mental shortcut</p>
+              <p>
+                If the page only lets the user type and send, you usually need group 2 and group 3. If the page also
+                loads existing data first, add group 1.
+              </p>
+            </div>
+          </div>
+        </section>
 
-        {/* The actual form */}
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Add todo (type 'error' to simulate failure)"
-            disabled={isSubmitting}
-          />
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add"}
-          </Button>
-        </form>
+        <nav className="rounded-lg border bg-card p-5 space-y-3">
+          <h2 className="font-semibold">Table of Contents</h2>
+          <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap">
+            <a href="#groups" className="text-primary hover:underline">
+              0. Define the Groups
+            </a>
+            <a href="#form-type" className="text-primary hover:underline">
+              1. Form Type: Two Groups
+            </a>
+            <a href="#full-crud" className="text-primary hover:underline">
+              2. Full CRUD: Three Groups
+            </a>
+            <a href="#analysis" className="text-primary hover:underline">
+              3. Analysis and Problems
+            </a>
+          </div>
+        </nav>
 
-        {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+        <section id="form-type" className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h2 className="font-semibold">1. Form Type: Contact Form</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              If the page is only a contact form, you usually do not need the read bucket. The structure is simpler:
+              group 2 for form state and group 3 for submission state.
+            </p>
+            <div className="rounded-lg bg-muted/40 border p-4 text-sm text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">A typical contact form shape</p>
+              <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground">
+{`const [form, setForm] = useState({ name: "", email: "", message: "" })
+// GROUP 2: form state for what the user is typing
 
-        {/* List display */}
-        <div className="space-y-2">
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : error ? (
-            <p className="text-destructive">{error}</p>
-          ) : (
-            <ul className="space-y-2">
-              {todos.map((todo, i) => (
-                <li key={i} className="p-3 rounded bg-muted">
-                  {todo}
+const [isSubmitting, setIsSubmitting] = useState(false)
+const [error, setError] = useState<string | null>(null)
+// GROUP 3: submission state for the send request
+
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+  setIsSubmitting(true)
+  setError(null)
+  try {
+    await sendMessage(form)
+    setForm({ name: "", email: "", message: "" })
+  } catch (err) {
+    setError("Message failed to send")
+  } finally {
+    setIsSubmitting(false)
+  }
+}`}
+              </pre>
+              <p>
+                <strong>What `e.preventDefault()` is actually stopping:</strong> the browser's normal form submit. Without
+                it, the browser would send the form, navigate or reload the page, and hand control to the server or the
+                URL in the form action. Calling `preventDefault()` cancels that native submit so your JavaScript handler
+                can take over completely.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">Typical state groups</p>
+              <ul className="space-y-1 ml-4">
+                <li>• Group 2: form state like name, email, message</li>
+                <li>• Group 3: submission state like pending and error</li>
+                <li>• No group 1 unless the form preloads existing data</li>
+              </ul>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              That is why a simple new-message form is mostly about typing and sending. You keep the user input local,
+              and only track whether the send action is running or failed.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              If you wanted to add a real-world improvement, the next step would be field-level validation or saved form
+              values. That is still mostly group 2, unless you are loading those values from the server, which would pull
+              group 1 back in.
+            </p>
+          </div>
+        </section>
+
+        <section id="full-crud" className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">2. Full CRUD: Three Groups</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              A full CRUD page adds the read bucket back in. Now the state naturally splits into three groups: read the
+              existing data, manage the form state, and submit the mutation.
+            </p>
+
+            <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">Example flow</p>
+              <ul className="space-y-1 ml-4">
+                <li>• Fetch records on mount</li>
+                <li>• Let the user type in a form field</li>
+                <li>• Submit the new item and update the list</li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm space-y-2">
+              <p className="font-semibold text-destructive">The three buckets</p>
+              <ul className="text-muted-foreground space-y-2">
+                <li>
+                  <strong>1. Read</strong> - list data, loading, and fetch errors.
                 </li>
-              ))}
+                <li>
+                  <strong>2. Form State</strong> - what the user is typing.
+                </li>
+                <li>
+                  <strong>3. Submission State</strong> - pending and error for the create action.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg border bg-background p-4 text-sm text-muted-foreground space-y-3">
+              <p className="font-medium text-foreground">How the classic version usually looks</p>
+              <pre className="overflow-x-auto rounded bg-muted p-3 text-xs text-foreground">
+{`// GROUP 1: read state
+const [todos, setTodos] = useState<string[]>([])
+const [isLoading, setIsLoading] = useState(true)
+const [error, setError] = useState<string | null>(null)
+
+// GROUP 2: form state
+const [inputValue, setInputValue] = useState("")
+
+// GROUP 3: submission state
+const [isSubmitting, setIsSubmitting] = useState(false)
+const [submitError, setSubmitError] = useState<string | null>(null)
+
+useEffect(() => {
+  loadTodos()
+}, [])`}
+              </pre>
+              <p>
+                This is the point where the shape starts to matter more than the exact hooks. The page is really just
+                tracking three categories of state, but each category has its own lifecycle and its own failure mode.
+              </p>
+            </div>
+
+            <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium text-foreground mb-1">Read</p>
+                <p>Fetching initial todos with `useEffect` and showing loading or error state.</p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium text-foreground mb-1">Form State</p>
+                <p>Tracking the input value separately so typing does not touch server data.</p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium text-foreground mb-1">Submission State</p>
+                <p>Showing pending and error state while the create request is in flight.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Add todo (type 'error' to simulate failure)"
+                disabled={isSubmitting}
+              />
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add"}
+              </Button>
+            </form>
+
+            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">Why submit state feels separate</p>
+              <p>
+                The list can be perfectly loaded while the submit action is still pending. That is why the pending and
+                error flags do not belong to the list itself. They belong to the mutation.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {isLoading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : error ? (
+                <p className="text-destructive">{error}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {todos.map((todo, i) => (
+                    <li key={i} className="rounded bg-muted p-3">
+                      {todo}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section id="analysis" className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h2 className="font-semibold">3. Analysis and Problems</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The classic model works, but the cost is that you own all the orchestration. That is where the problems
+              start to show up.
+            </p>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <strong>Boilerplate</strong> - each bucket needs its own state variables, and CRUD pages multiply that
+                quickly.
+              </li>
+              <li>
+                <strong>Race conditions</strong> - fetches need cleanup so you do not update state after unmount.
+              </li>
+              <li>
+                <strong>Manual resets</strong> - you must remember to clear errors and pending state at the right time.
+              </li>
+              <li>
+                <strong>No progressive enhancement</strong> - `e.preventDefault()` cancels the browser's native submit,
+                so the form depends on JavaScript instead of still working as a normal HTML form.
+              </li>
             </ul>
-          )}
-        </div>
+          </div>
 
-        <div className="p-5 rounded-lg border bg-card space-y-3">
-          <h2 className="font-semibold">Code Analysis</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Count the state variables: <code className="bg-muted px-1 rounded">todos</code>,
-            <code className="bg-muted px-1 rounded mx-1">isLoading</code>,
-            <code className="bg-muted px-1 rounded mx-1">error</code>,
-            <code className="bg-muted px-1 rounded mx-1">isSubmitting</code>,
-            <code className="bg-muted px-1 rounded mx-1">submitError</code>,
-            <code className="bg-muted px-1 rounded mx-1">inputValue</code>. That's 6 pieces of state for a simple todo
-            list.
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Now imagine this pattern across 20 components in a real app. Each component with its own loading/error
-            states, each with potential race conditions, each with manual state resets. This is why the React team
-            introduced better primitives.
-          </p>
-        </div>
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h3 className="font-semibold">More concrete problem examples</h3>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="rounded-lg bg-muted/40 p-4">
+                <p className="font-medium text-foreground mb-2">Race condition example</p>
+                <pre className="overflow-x-auto text-xs text-foreground">
+{`// GROUP 1: read state needs cleanup
+useEffect(() => {
+  let cancelled = false
 
-        <div className="p-5 rounded-lg border bg-card space-y-4">
-          <h2 className="font-semibold">State Management Deep Dive</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-foreground text-sm mb-2">The Three State Groups</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Notice how states naturally divide into three categories:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 mt-2 ml-4">
-                <li><strong>Fetching data:</strong> <code className="bg-muted px-1 rounded">todos</code>, <code className="bg-muted px-1 rounded">isLoading</code>, <code className="bg-muted px-1 rounded">error</code></li>
-                <li><strong>User input:</strong> <code className="bg-muted px-1 rounded">inputValue</code> (what user is typing)</li>
-                <li><strong>Submitting:</strong> <code className="bg-muted px-1 rounded">isSubmitting</code>, <code className="bg-muted px-1 rounded">submitError</code> (send to server)</li>
-              </ul>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                Each async operation (fetch, submit, delete, edit) needs its own loading/error pair. This is why a real app with 5 async operations ends up with 10+ state variables just for status tracking.
-              </p>
-              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
-                <div><span className="text-blue-600">// GROUP 1: Fetching initial todos</span></div>
-                <div><span className="text-purple-600">const</span> [todos, setTodos] = <span className="text-orange-600">useState</span>([])        <span className="text-gray-500">// What comes back</span></div>
-                <div><span className="text-purple-600">const</span> [isLoading, setIsLoading] = <span className="text-orange-600">useState</span>(<span className="text-green-600">true</span>)</div>
-                <div><span className="text-purple-600">const</span> [error, setError] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)</div>
-                <div className="mt-2"><span className="text-blue-600">// GROUP 2: User typing</span></div>
-                <div><span className="text-purple-600">const</span> [inputValue, setInputValue] = <span className="text-orange-600">useState</span>(<span className="text-green-600">""</span>)  <span className="text-gray-500">// What we're typing</span></div>
-                <div className="mt-2"><span className="text-blue-600">// GROUP 3: Submitting form</span></div>
-                <div><span className="text-purple-600">const</span> [isSubmitting, setIsSubmitting] = <span className="text-orange-600">useState</span>(<span className="text-green-600">false</span>)</div>
-                <div><span className="text-purple-600">const</span> [submitError, setSubmitError] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)  <span className="text-gray-500">// Errors only</span></div>
-              </div>
-            </div>
+  async function fetchTodos() {
+    const data = await fakeApi.getTodos()
+    if (!cancelled) {
+      setTodos(data)
+    }
+  }
 
-            <div>
-              <h3 className="font-medium text-foreground text-sm mb-2">Success Messages: Implicit vs Explicit</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                This pattern shows <strong>implicit success</strong>: when you submit, the todo appears in the list and the input clears. The user sees success through data changes, not a message.
-              </p>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-                In real production apps, teams use different approaches:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-2 mt-2 ml-4">
-                <li><strong>Error-only:</strong> No success notification, just show errors. Common for less critical actions.</li>
-                <li><strong>Toast notification:</strong> Brief "Success!" message (1-2 sec, auto-dismiss). Used on Twitter/YouTube.</li>
-                <li><strong>Explicit state:</strong> If you want a success message, add a separate state (<code className="bg-muted px-1 rounded">successMessage</code>) because controlling when to show and dismiss requires explicit tracking, not inference from HTTP status codes.</li>
-              </ul>
-              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
-                <div className="text-red-600">❌ Implicit (current approach)</div>
-                <div className="text-gray-500">// Success shown through data, not state</div>
-                <div><span className="text-purple-600">const</span> newTodo = <span className="text-orange-600">await</span> api.addTodo(input)</div>
-                <div><span className="text-orange-600">setTodos</span>(prev =&gt; [...prev, newTodo])  <span className="text-gray-500">// User sees it appear</span></div>
-                <div><span className="text-orange-600">setInputValue</span>(<span className="text-green-600">""</span>)  <span className="text-gray-500">// Empty field = success</span></div>
-                <div className="mt-2 text-green-600">✓ Explicit (if you want toast)</div>
-                <div className="text-gray-500">// Success tracked in state with auto-dismiss</div>
-                <div><span className="text-purple-600">const</span> [successMsg, setSuccessMsg] = <span className="text-orange-600">useState</span>(<span className="text-green-600">null</span>)</div>
-                <div><span className="text-orange-600">setSuccessMsg</span>(<span className="text-green-600">"Todo added!"</span>)</div>
-                <div><span className="text-orange-600">setTimeout</span>(() =&gt; <span className="text-orange-600">setSuccessMsg</span>(<span className="text-green-600">null</span>), <span className="text-purple-600">2000</span>)</div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium text-foreground text-sm mb-2">Why Error States Exist (But Not Success States)</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Error messages need persistence because the user must acknowledge them or fix the problem. Success messages are ephemeral—they flash and disappear. That's why you see:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 mt-2 ml-4">
-                <li>✓ <code className="bg-muted px-1 rounded">submitError</code> state variable → stays visible until user acts</li>
-                <li>✗ No <code className="bg-muted px-1 rounded">submitSuccess</code> state → success is shown through data changes (todo appears)</li>
-              </ul>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                If you want explicit success feedback, you'd add state and a timer to auto-dismiss it—but the cleaner approach is letting the UI changes (data appearing, input clearing) speak for themselves.
-              </p>
-              <div className="mt-3 p-3 bg-muted rounded text-xs font-mono text-foreground space-y-1">
-                <div className="text-green-600">✓ Error stays visible (needs state)</div>
-                <pre className="text-sm text-gray-300 overflow-x-auto">
-{`const [submitError, setSubmitError] = useState(null)
-{submitError && <div>{submitError}</div>}`}
+  fetchTodos()
+  return () => {
+    cancelled = true
+  }
+}, [])`}
                 </pre>
-                <div className="text-gray-500 mt-1">// Persists until user fixes and resubmits</div>
-                <div className="mt-2 text-orange-600">✗ Success disappears (no state needed)</div>
-                <div className="text-gray-500">// Just update the data, input clears, done!</div>
-                <pre className="text-sm text-gray-300 overflow-x-auto">
-{`setTodos(prev => [...prev, newTodo])
-setInputValue("")`}
+              </div>
+
+              <div className="rounded-lg bg-muted/40 p-4">
+                <p className="font-medium text-foreground mb-2">Submission example</p>
+                <pre className="overflow-x-auto text-xs text-foreground">
+{`// GROUP 2 + GROUP 3 working together
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+  setIsSubmitting(true)
+  setSubmitError(null)
+
+  try {
+    const newTodo = await fakeApi.addTodo(inputValue)
+    setTodos((prev) => [...prev, newTodo])
+    setInputValue("")
+  } catch (err) {
+    setSubmitError("Failed to add")
+  } finally {
+    setIsSubmitting(false)
+  }
+}`}
                 </pre>
+                <p className="mt-2">
+                  Here `preventDefault()` is what stops the browser from doing a real HTML form submission. That is why
+                  this pattern is called client-controlled: React code is replacing the browser's built-in form flow.
+                </p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation between patterns */}
-        <div className="flex gap-3 pt-8 border-t justify-between">
-          <Link href="/" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h3 className="font-semibold">Why this matters</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The important mental model is not the exact number of hooks. It is the grouping: fetched data, form state,
+              and submission state. Once you see those buckets, you can tell whether a page is a simple form or a full
+              CRUD screen.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              That is also why React kept evolving the form story. The newer APIs reduce the amount of manual state you
+              have to coordinate yourself.
+            </p>
+          </div>
+        </section>
+
+        <div className="flex justify-between gap-3 border-t pt-8">
+          <Link href="/" className="rounded-lg bg-muted px-4 py-2 text-muted-foreground transition-colors hover:bg-muted/80">
             ← Home
           </Link>
-          <Link href="/transition" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <Link href="/transition" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90">
             Transition Pattern →
           </Link>
         </div>
