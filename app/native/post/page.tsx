@@ -25,6 +25,21 @@ async function PostContent({ searchParams }: { searchParams: Promise<{ added?: s
         </ul>
       </div>
 
+      {/* Hard nav callout */}
+      <div className="px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs text-amber-800 dark:text-amber-300 space-y-1">
+        <p className="font-semibold">Hard navigation — even inside App Router</p>
+        <p className="leading-relaxed">
+          App Router normally converts redirects into{" "}
+          <strong>soft navigations</strong> — but only when a{" "}
+          <strong>Server Action</strong> calls{" "}
+          <code className="bg-amber-500/10 px-1 py-0.5 rounded">redirect()</code>. Here there is no Server
+          Action. The form posts directly to a Route Handler which returns an HTTP{" "}
+          <code className="bg-amber-500/10 px-1 py-0.5 rounded">303</code>. The browser follows that
+          at the HTTP level — the Next.js client router never gets involved. Result: two genuine full-page
+          reloads, identical to what a PHP server would have produced in 1999.
+        </p>
+      </div>
+
       {/* Success banner — set by the redirect's ?added=1 */}
       {added === "1" && (
         <div className="px-4 py-3 rounded-lg border border-green-500/40 bg-green-500/10 text-sm text-green-700">
