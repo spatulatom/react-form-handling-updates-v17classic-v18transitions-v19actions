@@ -27,11 +27,13 @@ export default function ClassicPattern() {
   const [error, setError] = useState<string | null>(null)
 
   // CRUD GROUP 2: Form state for what the user is typing
+  const [inputValue, setInputValue] = useState("")
+  const [validationError, setValidationError] = useState<string | null>(null)
+
   // CRUD GROUP 3: Submission state for request status
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-
-  const [inputValue, setInputValue] = useState("")
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
   // PROBLEM 3: useEffect for data fetching - race conditions possible
   useEffect(() => {
@@ -66,15 +68,36 @@ export default function ClassicPattern() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault() // PROBLEM 5: Must prevent default, breaks without JS
 
-    if (!inputValue.trim()) return
+    // CLIENT-SIDE VALIDATION (Bucket 2)
+    if (!inputValue.trim()) {
+      setValidationError("Todo cannot be empty")
+      return
+    }
+    if (inputValue.length > 100) {
+      setValidationError("Todo must be 100 characters or less")
+      return
+    }
+    
+    // Validation passed, clear error and proceed to submission
+    setValidationError(null)
 
     try {
       setIsSubmitting(true)
       setSubmitError(null)
+      setSubmitSuccess(null)
       const newTodo = await fakeApi.addTodo(inputValue)
       setTodos((prev) => [...prev, newTodo])
       setInputValue("")
+      
+      // CHOICE 1 (implicit): Just clearing the form is the success signal (common in CRUD)
+      // The user sees the new item appear in the list → success
+      
+      // CHOICE 2 (explicit): Show a success message then clear it (common in simple forms)
+      // Uncomment below to see:
+      // setSubmitSuccess("Todo added!")
+      // setTimeout(() => setSubmitSuccess(null), 2000)
     } catch (e) {
+      // SERVER-SIDE ERROR (Bucket 3)
       setSubmitError(e instanceof Error ? e.message : "Failed to add")
     } finally {
       setIsSubmitting(false)
@@ -105,6 +128,23 @@ export default function ClassicPattern() {
             appear when you manage everything by hand.
           </p>
         </div>
+        <nav className="rounded-lg border bg-card p-5 space-y-3">
+          <h2 className="font-semibold">Table of Contents</h2>
+          <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap">
+            <a href="#groups" className="text-primary hover:underline">
+              1. Define the Groups
+            </a>
+            <a href="#form-type" className="text-primary hover:underline">
+              2. Form Type: Two Groups
+            </a>
+            <a href="#full-crud" className="text-primary hover:underline">
+              3. Full CRUD: Three Groups
+            </a>
+            <a href="#analysis" className="text-primary hover:underline">
+              4. Analysis and Problems
+            </a>
+          </div>
+        </nav>
 
         <section id="groups" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-4">
@@ -140,27 +180,11 @@ export default function ClassicPattern() {
           </div>
         </section>
 
-        <nav className="rounded-lg border bg-card p-5 space-y-3">
-          <h2 className="font-semibold">Table of Contents</h2>
-          <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap">
-            <a href="#groups" className="text-primary hover:underline">
-              0. Define the Groups
-            </a>
-            <a href="#form-type" className="text-primary hover:underline">
-              1. Form Type: Two Groups
-            </a>
-            <a href="#full-crud" className="text-primary hover:underline">
-              2. Full CRUD: Three Groups
-            </a>
-            <a href="#analysis" className="text-primary hover:underline">
-              3. Analysis and Problems
-            </a>
-          </div>
-        </nav>
+        
 
         <section id="form-type" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-3">
-            <h2 className="font-semibold">1. Form Type: Contact Form</h2>
+            <h2 className="font-semibold">2. Form Type: Contact Form</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               If the page is only a contact form, you usually do not need the read bucket. The structure is simpler:
               group 2 for form state and group 3 for submission state.
@@ -168,22 +192,37 @@ export default function ClassicPattern() {
             <div className="rounded-lg bg-muted/40 border p-4 text-sm text-muted-foreground space-y-2">
               <p className="font-medium text-foreground">A typical contact form shape</p>
               <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground">
-{`const [form, setForm] = useState({ name: "", email: "", message: "" })
-// GROUP 2: form state for what the user is typing
+{`// GROUP 2: form state
+const [form, setForm] = useState({ name: "", email: "", message: "" })
+const [validationError, setValidationError] = useState(null) // usually included
 
-const [isSubmitting, setIsSubmitting] = useState(false)
-const [error, setError] = useState<string | null>(null)
-// GROUP 3: submission state for the send request
+// GROUP 3: submission state
+const [isSubmitting, setIsSubmitting] = useState(false)      // always included
+const [submitError, setSubmitError] = useState(null)         // always included
+const [submitSuccess, setSubmitSuccess] = useState(null)     // usually included (simple forms need explicit confirmation)
 
 async function handleSubmit(e: React.FormEvent) {
   e.preventDefault()
+
+  // client-side validation (Bucket 2) — usually included
+  if (!form.email.includes("@")) {
+    setValidationError("Invalid email")
+    return
+  }
+  setValidationError(null)
+
   setIsSubmitting(true)
-  setError(null)
+  setSubmitError(null)
+  setSubmitSuccess(null)
   try {
-    await sendMessage(form)
-    setForm({ name: "", email: "", message: "" })
+    const response = await sendMessage(form)
+    if (response.ok) {
+      setForm({ name: "", email: "", message: "" })
+      setSubmitSuccess("Message sent!")              // explicit success — user needs confirmation
+      setTimeout(() => setSubmitSuccess(null), 3000)
+    }
   } catch (err) {
-    setError("Message failed to send")
+    setSubmitError("Message failed to send")         // server-side error (Bucket 3)
   } finally {
     setIsSubmitting(false)
   }
@@ -199,8 +238,8 @@ async function handleSubmit(e: React.FormEvent) {
             <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground space-y-2">
               <p className="font-medium text-foreground">Typical state groups</p>
               <ul className="space-y-1 ml-4">
-                <li>• Group 2: form state like name, email, message</li>
-                <li>• Group 3: submission state like pending and error</li>
+                <li>• Group 2: form state like name, email, message — errors here are <strong>client-side</strong> (empty field, bad format) caught before sending</li>
+                <li>• Group 3: submission state like pending and error — errors here are <strong>server-side</strong> (rejected by API, business logic failure) caught in the catch block</li>
                 <li>• No group 1 unless the form preloads existing data</li>
               </ul>
             </div>
@@ -218,7 +257,7 @@ async function handleSubmit(e: React.FormEvent) {
 
         <section id="full-crud" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-4">
-            <h2 className="font-semibold">2. Full CRUD: Three Groups</h2>
+            <h2 className="font-semibold">3. Full CRUD: Three Groups</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A full CRUD page adds the read bucket back in. Now the state naturally splits into three groups: read the
               existing data, manage the form state, and submit the mutation.
@@ -237,13 +276,13 @@ async function handleSubmit(e: React.FormEvent) {
               <p className="font-semibold text-destructive">The three buckets</p>
               <ul className="text-muted-foreground space-y-2">
                 <li>
-                  <strong>1. Read</strong> - list data, loading, and fetch errors.
+                  <strong>1. Read</strong> - list data, loading, and fetch errors <span className="text-xs">(server-side — the initial load failed)</span>.
                 </li>
                 <li>
-                  <strong>2. Form State</strong> - what the user is typing.
+                  <strong>2. Form State</strong> - what the user is typing, plus validation errors <span className="text-xs">(client-side — caught before the request is sent: empty, bad format, too long)</span>.
                 </li>
                 <li>
-                  <strong>3. Submission State</strong> - pending and error for the create action.
+                  <strong>3. Submission State</strong> - pending, server-side errors <span className="text-xs">(caught in catch: rejected by API, conflict, business logic failure)</span>, and explicit success message <span className="text-xs">(simple forms only — CRUD relies on Bucket 1 updating instead)</span>.
                 </li>
               </ul>
             </div>
@@ -252,20 +291,41 @@ async function handleSubmit(e: React.FormEvent) {
               <p className="font-medium text-foreground">How the classic version usually looks</p>
               <pre className="overflow-x-auto rounded bg-muted p-3 text-xs text-foreground">
 {`// GROUP 1: read state
-const [todos, setTodos] = useState<string[]>([])
-const [isLoading, setIsLoading] = useState(true)
-const [error, setError] = useState<string | null>(null)
+const [todos, setTodos] = useState<string[]>([])     // always included
+const [isLoading, setIsLoading] = useState(true)     // always included
+const [fetchError, setFetchError] = useState(null)   // always included
 
 // GROUP 2: form state
-const [inputValue, setInputValue] = useState("")
+const [inputValue, setInputValue] = useState("")     // always included
+const [validationError, setValidationError] = useState(null) // usually included
 
 // GROUP 3: submission state
-const [isSubmitting, setIsSubmitting] = useState(false)
-const [submitError, setSubmitError] = useState<string | null>(null)
+const [isSubmitting, setIsSubmitting] = useState(false)  // always included
+const [submitError, setSubmitError] = useState(null)     // always included
+// no submitSuccess here — list updating (Bucket 1) is the implicit success signal
 
-useEffect(() => {
-  loadTodos()
-}, [])`}
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+
+  // client-side validation — usually included
+  if (!inputValue.trim()) {
+    setValidationError("Cannot be empty")
+    return
+  }
+  setValidationError(null)
+
+  setIsSubmitting(true)
+  setSubmitError(null)
+  try {
+    const newTodo = await api.addTodo(inputValue)
+    setTodos((prev) => [...prev, newTodo])  // Bucket 1 update = implicit success signal
+    setInputValue("")                       // Bucket 2 reset — side effect, not success signal
+  } catch (err) {
+    setSubmitError("Failed to add")         // server-side error (Bucket 3)
+  } finally {
+    setIsSubmitting(false)
+  }
+}`}
               </pre>
               <p>
                 This is the point where the shape starts to matter more than the exact hooks. The page is really just
@@ -300,7 +360,11 @@ useEffect(() => {
               </Button>
             </form>
 
-            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+            {validationError && <p className="text-sm text-amber-600">⚠️ {validationError}</p>}
+
+            {submitSuccess && <p className="text-sm text-green-600">✓ {submitSuccess}</p>}
+
+            {submitError && <p className="text-sm text-destructive">❌ {submitError}</p>}
 
             <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground space-y-2">
               <p className="font-medium text-foreground">Why submit state feels separate</p>
@@ -330,7 +394,7 @@ useEffect(() => {
 
         <section id="analysis" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-3">
-            <h2 className="font-semibold">3. Analysis and Problems</h2>
+            <h2 className="font-semibold">4. Analysis and Problems</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               The classic model works, but the cost is that you own all the orchestration. That is where the problems
               start to show up.
@@ -351,6 +415,84 @@ useEffect(() => {
                 so the form depends on JavaScript instead of still working as a normal HTML form.
               </li>
             </ul>
+          </div>
+
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h3 className="font-semibold">Client-side vs Server-side Validation (Bucket 2 vs 3)</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              An important distinction: validation errors can come from two places, and they belong in different buckets.
+            </p>
+            <div className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+                <p className="font-medium">Bucket 2: Client-side Validation</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Errors you catch before sending to the server. Examples: empty field, invalid email format, text too long, required field missing.
+                </p>
+                <pre className="overflow-x-auto rounded bg-background p-2 text-xs text-foreground">
+{`if (!inputValue.trim()) {
+  setValidationError("Empty")
+  return
+}`}
+                </pre>
+              </div>
+              <div className="rounded-lg border bg-destructive/10 p-4 space-y-2">
+                <p className="font-medium text-destructive">Bucket 3: Server-side Validation</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Errors the server sends back. Examples: email already exists, insufficient permissions, business logic rejected it.
+                </p>
+                <pre className="overflow-x-auto rounded bg-background p-2 text-xs text-foreground">
+{`} catch (e) {
+  setSubmitError("Server rejected")
+}`}
+                </pre>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              When you submit, client-side validation runs first and short-circuits if it fails. Only if it passes do you send to the server. Server errors come back in the submit phase and should be shown separately.
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card p-5 space-y-3">
+            <h3 className="font-semibold">Implicit vs Explicit Success (Bucket 3)</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Bucket 3 also handles success differently depending on the form type.
+            </p>
+            <div className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="rounded-lg border bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-2">
+                <p className="font-medium">Simple Form: Explicit Success</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Waits for the API response and checks if it succeeded before showing the success message.
+                </p>
+                <pre className="overflow-x-auto rounded bg-background p-2 text-xs text-foreground">
+{`try {
+  const response = await sendMessage(form)
+  if (response.ok) {  // wait for ok response
+    setSubmitSuccess("Sent!")
+    setTimeout(() => 
+      setSubmitSuccess(null), 2000)
+  }
+} catch (err) {
+  setSubmitError("Failed")
+}`}
+                </pre>
+              </div>
+              <div className="rounded-lg border bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-2">
+                <p className="font-medium text-emerald-700 dark:text-emerald-400">CRUD: Implicit Success</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  The list updates with the new item (Bucket 1). That UI change is the success signal—no message needed.
+                </p>
+                <pre className="overflow-x-auto rounded bg-background p-2 text-xs text-foreground">
+{`try {
+  const newTodo = await api.add(input)
+  setTodos([...todos, newTodo])  // ← Bucket 1 updates
+  setInputValue("")  // form reset side effect
+}`}
+                </pre>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              CRUD pages rely on Bucket 1 changes (updated list) to signal success. The new item appearing is the success signal. Simple forms often show an explicit message. Both are valid; it depends on user feedback needs.
+            </p>
           </div>
 
           <div className="rounded-lg border bg-card p-5 space-y-3">
