@@ -9,28 +9,47 @@ export default function Home() {
         <h1 className="text-3xl font-bold text-foreground">React Form Handling Evolution</h1>
         <p className="text-muted-foreground">See how form handling evolved from React 17 → 18 → 19</p>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        {/* Chapter 0 — Before React */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter 0 — Before React</p>
           <Link
-            href="/classic"
-            className="block p-6 rounded-lg border-2 border-primary/50 bg-card hover:border-primary transition-colors"
+            href="/native"
+            className="block p-6 rounded-lg border-2 border-stone-500/30 bg-card hover:border-stone-500 transition-colors"
           >
-            <h2 className="font-semibold text-lg">📝 Form Demos</h2>
+            <h2 className="font-semibold text-lg">🌐 Native HTML Forms</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Todo list examples showing the evolution of form handling patterns
+              How the web handled interactivity before JavaScript — pure HTML forms, full-page round-trips, zero JS
             </p>
-            <p className="text-xs text-muted-foreground mt-2">Classic → Transition → Actions</p>
+            <p className="text-xs text-muted-foreground mt-2">GET (query string) · POST (PRG pattern)</p>
           </Link>
+        </div>
 
-          <Link
-            href="/race"
-            className="block p-6 rounded-lg border-2 border-destructive/50 bg-card hover:border-destructive transition-colors"
-          >
-            <h2 className="font-semibold text-lg">🏎️ Race Condition Demos</h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              Click rapidly to see how each pattern handles concurrent requests
-            </p>
-            <p className="text-xs text-destructive mt-2">See the bugs in action!</p>
-          </Link>
+        {/* React patterns */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">React Patterns</p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Link
+              href="/classic"
+              className="block p-6 rounded-lg border-2 border-primary/50 bg-card hover:border-primary transition-colors"
+            >
+              <h2 className="font-semibold text-lg">📝 Form Demos</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                Todo list examples showing the evolution of form handling patterns
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">Classic → Transition → Actions</p>
+            </Link>
+
+            <Link
+              href="/race"
+              className="block p-6 rounded-lg border-2 border-destructive/50 bg-card hover:border-destructive transition-colors"
+            >
+              <h2 className="font-semibold text-lg">🏎️ Race Condition Demos</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                Click rapidly to see how each pattern handles concurrent requests
+              </p>
+              <p className="text-xs text-destructive mt-2">See the bugs in action!</p>
+            </Link>
+          </div>
         </div>
 
         <div className="p-6 rounded-lg border bg-card space-y-4">
