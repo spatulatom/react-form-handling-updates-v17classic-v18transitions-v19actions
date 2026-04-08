@@ -55,20 +55,21 @@ export default function Home() {
         <div className="p-6 rounded-lg border bg-card space-y-4">
           <h2 className="text-xl font-semibold">Why This Evolution Matters</h2>
           <p className="text-muted-foreground leading-relaxed">
-            For years, React developers followed a mental model where <strong>you</strong> orchestrate everything: you
-            track loading states, you catch errors, you manage data flow. This worked, but led to boilerplate, bugs
-            (like race conditions), and forms that broke without JavaScript.
+            The classic form story usually falls into three groups of state: <strong>Group 1 for reading data</strong>,{" "}
+            <strong>Group 2 for what the user is editing</strong>, and <strong>Group 3 for the submission itself</strong>.
+            For years, React developers had to orchestrate all three groups manually in the client.
           </p>
           <p className="text-muted-foreground leading-relaxed">
             React 18 introduced <code className="bg-muted px-1.5 py-0.5 rounded text-sm">useTransition</code> as a
-            stepping stone - letting React manage pending states. React 19 completes the shift with{" "}
-            <strong>Actions</strong>: you describe <em>what should happen</em>, and React handles <em>how</em> (loading,
-            errors, revalidation).
+            stepping stone - mainly shrinking the manual work inside Group 3 by handling pending state for you. React
+            19 goes further with <strong>Actions</strong>: Group 1 can move to the server, Group 2 can stay in native
+            browser form state, and Group 3 can flow through React's form hooks.
           </p>
           <p className="text-muted-foreground leading-relaxed">
             This is an <strong>inversion of control</strong>. Instead of imperative state management, you declaratively
-            define actions and let React optimize the experience - including progressive enhancement where forms work
-            before JavaScript even loads.
+            define actions and let React optimize the experience. In this project, the true native no-JavaScript
+            baseline is shown separately on the Native forms pages, while the Actions route focuses on the hydrated
+            React 19 flow under Cache Components.
           </p>
         </div>
 
@@ -90,9 +91,9 @@ export default function Home() {
             <h2 className="font-semibold text-lg">2. Transition Pattern</h2>
             <p className="text-sm text-muted-foreground mt-2">useTransition (React 18+)</p>
             <ul className="text-xs text-green-600 mt-3 space-y-1">
-              <li>✓ Auto pending state</li>
-              <li>✓ Non-blocking updates</li>
-              <li className="text-destructive">• Still client-only</li>
+              <li>✓ Smaller Group 3 pending state</li>
+              <li>✓ Non-blocking rendering</li>
+              <li className="text-destructive">• Groups 1 and 2 stay manual</li>
             </ul>
           </Link>
 
@@ -100,9 +101,9 @@ export default function Home() {
             <h2 className="font-semibold text-lg">3. Actions Pattern</h2>
             <p className="text-sm text-muted-foreground mt-2">useActionState + formAction (React 19)</p>
             <ul className="text-xs text-green-600 mt-3 space-y-1">
-              <li>✓ Progressive enhancement</li>
-              <li>✓ Built-in error handling</li>
-              <li>✓ Works without JS</li>
+              <li>✓ Group 1 moves server-side</li>
+              <li>✓ Group 2 uses native form state</li>
+              <li>◐ Streamed via Cache Components</li>
             </ul>
           </Link>
         </div>
@@ -127,12 +128,12 @@ export default function Home() {
               <h3 className="font-medium text-green-600">New Model (Declarative)</h3>
               <p className="text-sm text-muted-foreground">"React handles the how"</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>1. Define an action function</li>
-                <li>2. Connect it to form via action prop</li>
-                <li>3. React tracks pending automatically</li>
-                <li>4. Errors returned from action, not thrown</li>
-                <li>5. Form resets automatically on success</li>
-                <li>6. Works without JS (progressive enhancement)</li>
+                <li>1. Read data on the server when possible</li>
+                <li>2. Connect the form to an action</li>
+                <li>3. Let the browser own the input until submit</li>
+                <li>4. Let React expose pending and returned errors</li>
+                <li>5. Be explicit about where the native baseline is demonstrated</li>
+                <li>6. Add client state only where it improves the enhanced path</li>
               </ul>
             </div>
           </div>
@@ -169,7 +170,7 @@ export default function Home() {
                 <li>• React 18: useTransition for non-blocking submissions</li>
                 <li>• React 19: Server Actions, useActionState, useFormStatus</li>
                 <li>• Race conditions in all three React patterns</li>
-                <li>• Progressive enhancement (works without JS)</li>
+                <li>• Native no-JS baseline on the HTML form pages</li>
               </ul>
             </div>
             <div className="space-y-2">

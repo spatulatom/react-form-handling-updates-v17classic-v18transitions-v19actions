@@ -6,6 +6,10 @@
 
 export type StoreItem = { id: number; text: string }
 
+type ActionTodoStore = {
+  items: string[]
+}
+
 const seed: StoreItem[] = [
   { id: 1, text: "Buy groceries" },
   { id: 2, text: "Read a book" },
@@ -15,10 +19,16 @@ const seed: StoreItem[] = [
 declare global {
   // eslint-disable-next-line no-var
   var __nativeStore: { items: StoreItem[]; nextId: number } | undefined
+  // eslint-disable-next-line no-var
+  var __actionTodoStore: ActionTodoStore | undefined
 }
 
 if (!globalThis.__nativeStore) {
   globalThis.__nativeStore = { items: [...seed], nextId: seed.length + 1 }
+}
+
+if (!globalThis.__actionTodoStore) {
+  globalThis.__actionTodoStore = { items: ["Buy milk", "Walk dog"] }
 }
 
 export function getItems(): StoreItem[] {
@@ -30,4 +40,14 @@ export function addItem(text: string): StoreItem {
   const item: StoreItem = { id: store.nextId++, text: text.trim() }
   store.items.push(item)
   return item
+}
+
+export function getActionTodos(): string[] {
+  return [...globalThis.__actionTodoStore!.items]
+}
+
+export function addActionTodo(text: string): string {
+  const trimmed = text.trim()
+  globalThis.__actionTodoStore!.items.push(trimmed)
+  return trimmed
 }

@@ -1,18 +1,15 @@
+import { Suspense } from "react"
 import Link from "next/link"
+import { connection } from "next/server"
 import { TodoList } from "@/components/todo-list"
+import { getActionTodos } from "@/lib/native-store"
 
-// Server-side initial data (no useEffect needed!)
-async function getTodos() {
-  // Simulate DB fetch
-  return ["Buy milk", "Walk dog"]
-}
-
-export default async function ActionsPattern() {
-  const initialTodos = await getTodos()
+async function ActionsContent() {
+  await connection()
+  const initialTodos = getActionTodos()
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/" className="text-sm text-muted-foreground hover:underline">
           ← Back
         </Link>
@@ -23,58 +20,84 @@ export default async function ActionsPattern() {
         </div>
 
         <div className="p-5 rounded-lg border bg-card space-y-4">
-          <h2 className="font-semibold">The Complete Solution</h2>
+          <h2 className="font-semibold">Same Three Groups, Different Owners</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            React 19 introduces <strong>Actions</strong> - a unified model for handling async operations. An Action is
-            any async function that can be used with forms or triggered programmatically. When marked with{" "}
-            <code className="bg-muted px-1 rounded">"use server"</code>, it becomes a Server Action that runs on the
-            server.
+            The Classic page introduced three groups: <strong>Group 1 for read state</strong>, <strong>Group 2 for
+            form state</strong>, and <strong>Group 3 for submission state</strong>. The Actions model does not make
+            those concerns disappear. It moves them to better owners.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The mental model shift is significant: instead of <em>preventing</em> the browser's native form behavior and
-            implementing your own, you <em>enhance</em> it. The form's{" "}
-            <code className="bg-muted px-1 rounded">action</code> prop accepts your async function directly. React
-            handles serializing the form data, calling your action, and updating the UI.
+            Instead of manually coordinating each group in client code, React and the browser take over more of the
+            plumbing. The form keeps native submit behavior, the server handles the mutation, and React wires the
+            response back into the UI.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            <strong>Progressive enhancement:</strong> Because we're using native form mechanics, the form actually works
-            before JavaScript loads! The browser will POST to your action endpoint. Once JS hydrates, React intercepts
-            and handles it client-side for a smoother experience.
+            <strong>Important caveat:</strong> this project uses Cache Components, so this route is streamed behind a
+            Suspense boundary in production. That makes <em>the hydrated React experience</em> the main thing this page
+            demonstrates. The true native no-JavaScript baseline is still best seen on <code className="bg-muted px-1 rounded">/native/post</code>.
           </p>
         </div>
 
-        {/* All problems solved */}
+        <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <p className="font-medium text-foreground">Group 1: Read</p>
+            <p>The page itself is a Server Component, so the initial list is fetched on the server instead of with useEffect.</p>
+            <p>No loading flag or fetch error state is needed just to paint the first screen.</p>
+          </div>
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <p className="font-medium text-foreground">Group 2: Form State</p>
+            <p>The browser owns the input value as native form state until submit.</p>
+            <p>That means no controlled input, no onChange handler, and no manual FormData construction.</p>
+          </div>
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <p className="font-medium text-foreground">Group 3: Submission State</p>
+            <p>Pending and returned errors are managed by React's form hooks instead of separate useState pairs.</p>
+            <p>The mutation still exists. It is just delegated to useActionState, useFormStatus, and the server action.</p>
+          </div>
+        </div>
+
         <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-sm space-y-3">
-          <p className="font-semibold text-green-600">All previous problems solved:</p>
+          <p className="font-semibold text-green-600">What gets simpler in practice</p>
           <ul className="text-muted-foreground space-y-2">
             <li>
-              <strong>✓ Progressive enhancement</strong> - Form works without JS. Try disabling JavaScript and
-              submitting - it still works! The server action runs and the page reloads with new data.
+              <strong>✓ Group 1 moves server-side</strong> - Initial data comes from the server during render, so there
+              is no client fetch effect to coordinate for this page.
             </li>
             <li>
-              <strong>✓ No loading state management</strong> -{" "}
-              <code className="bg-muted px-1 rounded">useFormStatus</code> hook provides{" "}
-              <code className="bg-muted px-1 rounded">pending</code> automatically. Used in the SubmitButton component -
-              it must be a child of the form.
+              <strong>✓ Group 2 becomes native form state</strong> - The browser serializes the inputs into FormData, so
+              this demo does not need input useState or e.preventDefault.
             </li>
             <li>
-              <strong>✓ No error state management</strong> - Errors are returned from the action as data, not thrown.
-              The <code className="bg-muted px-1 rounded">useActionState</code> hook wraps your action and provides the
-              result including any errors.
+              <strong>✓ Group 3 becomes declarative</strong> - <code className="bg-muted px-1 rounded">useFormStatus</code>
+              exposes pending and <code className="bg-muted px-1 rounded">useActionState</code> returns server-side
+              validation errors as data.
             </li>
             <li>
-              <strong>✓ No preventDefault</strong> - We use{" "}
-              <code className="bg-muted px-1 rounded">{"<form action={formAction}>"}</code>, not{" "}
-              <code className="bg-muted px-1 rounded">onSubmit</code>. Native form behavior is preserved.
+              <strong>✓ The server write path is still real</strong> - the action runs on the server and updates shared
+              state, which the hydrated page then reflects immediately.
+            </li>
+          </ul>
+        </div>
+
+        <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 text-sm space-y-3">
+          <p className="font-semibold text-amber-700 dark:text-amber-300">What did not disappear</p>
+          <ul className="text-muted-foreground space-y-2">
+            <li>
+              <strong>• The three groups still exist</strong> - they are just distributed across the server, the browser,
+              and React's form hooks instead of living in one client component.
             </li>
             <li>
-              <strong>✓ No useEffect for data</strong> - This is a Server Component! The{" "}
-              <code className="bg-muted px-1 rounded">getTodos()</code>
-              call happens on the server at request time. Data arrives with the HTML.
+              <strong>• Cache Components changes the delivery model</strong> - this route streams through Suspense in
+              production, so the fully no-JS baseline is easier to demonstrate on the native POST page than on this
+              React Actions page.
             </li>
             <li>
-              <strong>✓ Type-safe end-to-end</strong> - Server Actions are regular TypeScript functions. The compiler
-              checks your form data handling matches what the server expects.
+              <strong>• Server validation still matters</strong> - this demo validates inside the server action and returns
+              an error for useActionState to render.
+            </li>
+            <li>
+              <strong>• Some client state can still be useful</strong> - TodoList keeps a small local list state so the
+              JavaScript-enhanced path can append immediately after success.
             </li>
           </ul>
         </div>
@@ -85,26 +108,22 @@ export default async function ActionsPattern() {
             <div>
               <h3 className="font-medium text-foreground">useActionState</h3>
               <p className="text-muted-foreground mt-1">
-                Wraps an action function and provides: (1) the current state (including errors), and (2) a wrapped
-                action to pass to your form. It manages the async lifecycle and re-renders your component with the
-                action's return value.
+                Wraps an action function and gives the form a stateful result channel. In this page, that means Group 3
+                errors come back as returned data instead of a manual catch + setState sequence.
               </p>
             </div>
             <div>
               <h3 className="font-medium text-foreground">useFormStatus</h3>
               <p className="text-muted-foreground mt-1">
-                Must be called from a component <em>inside</em> a form. Returns{" "}
-                <code className="bg-muted px-1 rounded">{"{ pending, data, method, action }"}</code>. The{" "}
-                <code className="bg-muted px-1 rounded">pending</code> boolean is true while the form action is
-                executing.
+                Must be called from inside the form tree. It exposes Group 3 pending state without needing a separate
+                isSubmitting variable.
               </p>
             </div>
             <div>
               <h3 className="font-medium text-foreground">"use server" directive</h3>
               <p className="text-muted-foreground mt-1">
-                Marks a function as a Server Action. The function runs only on the server - it's not included in the
-                client bundle. You can directly access databases, environment variables, and other server-only
-                resources.
+                Marks the mutation so it runs on the server. That is what lets the browser submit the form natively when
+                JavaScript is unavailable, and what lets the server own the write path for the demo data.
               </p>
             </div>
           </div>
@@ -113,13 +132,12 @@ export default async function ActionsPattern() {
         <TodoList initialTodos={initialTodos} />
 
         <div className="p-5 rounded-lg border bg-card space-y-3">
-          <h2 className="font-semibold">Architecture Note</h2>
+          <h2 className="font-semibold">With JS vs Without JS</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Notice this page is a <strong>Server Component</strong> (no "use client" directive). It fetches initial data
-            on the server. The <code className="bg-muted px-1 rounded">TodoList</code> and
-            <code className="bg-muted px-1 rounded mx-1">TodoForm</code> are Client Components because they need
-            interactivity. This is the recommended pattern: Server Components for data fetching, Client Components for
-            interactions.
+            With JavaScript enabled, React intercepts the form submission, sends the FormData in the background, and the
+            client list updates immediately. With Cache Components enabled, the production route itself is streamed
+            through Suspense, so the plain no-JS baseline is better represented by <code className="bg-muted px-1 rounded">/native/post</code>
+            than by this hydrated Actions demo.
           </p>
         </div>
 
@@ -132,7 +150,16 @@ export default async function ActionsPattern() {
             Home
           </Link>
         </div>
-      </div>
+    </div>
+  )
+}
+
+export default function ActionsPattern() {
+  return (
+    <div className="min-h-screen bg-background p-8">
+      <Suspense fallback={<div className="mx-auto max-w-2xl text-sm text-muted-foreground">Loading...</div>}>
+        <ActionsContent />
+      </Suspense>
     </div>
   )
 }
