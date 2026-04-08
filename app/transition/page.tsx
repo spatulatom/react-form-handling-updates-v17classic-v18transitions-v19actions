@@ -19,11 +19,15 @@ const fakeApi = {
 }
 
 export default function TransitionPattern() {
+  // GROUP 1: Read state
   const [todos, setTodos] = useState<string[]>(["Buy milk", "Walk dog"])
+
+  // GROUP 2: Form state
   const [inputValue, setInputValue] = useState("")
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // GROUP 3: Submission state — isPending replaces manual isSubmitting; submitError is still manual
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   async function handleSubmit(e: React.FormEvent) {

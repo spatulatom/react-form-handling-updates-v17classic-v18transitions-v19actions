@@ -1,11 +1,9 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { connection } from "next/server"
 import { TodoList } from "@/components/todo-list"
 import { getActionTodos } from "@/lib/native-store"
 
 async function ActionsContent() {
-  await connection()
   const initialTodos = getActionTodos()
 
   return (
@@ -17,6 +15,15 @@ async function ActionsContent() {
         <div>
           <h1 className="text-2xl font-bold">Actions Pattern</h1>
           <p className="text-muted-foreground">useActionState + Server Actions (React 19)</p>
+        </div>
+
+        <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-4 text-sm space-y-2">
+          <p className="font-semibold text-sky-700 dark:text-sky-300">Cache Components Note</p>
+          <p className="text-muted-foreground leading-relaxed">
+            This page is meant to show the hydrated React 19 Actions flow. Because the project uses Cache Components,
+            production can stream this route through Suspense first. If you want to compare against the plain browser-only
+            no-JavaScript baseline, use <Link href="/native/post" className="underline underline-offset-4">/native/post</Link>.
+          </p>
         </div>
 
         <div className="p-5 rounded-lg border bg-card space-y-4">
