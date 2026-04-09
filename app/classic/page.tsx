@@ -260,6 +260,94 @@ export default function ClassicPattern() {
           </div>
         </section>
 
+        <section className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">The Synchronization Problem: Group 3's Hidden Job</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              There is an important architectural moment hidden in how Group 3 updates Group 1. It is worth surfacing now because it becomes the core problem that newer patterns solve.
+            </p>
+
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/40 border p-4">
+                <p className="font-medium text-foreground text-sm mb-3">What Group 3 is really doing</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// Group 3's orchestration includes this:
+try {
+  const newTodo = await fakeApi.addTodo(inputValue)
+  setTodos((prev) => [...prev, newTodo])  // ← What is this really doing?
+  setInputValue("")
+} catch (e) {
+  setSubmitError("Failed to add")
+}`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-4 text-sm space-y-3">
+                <p className="font-medium text-foreground">The synchronization choreography</p>
+                <div className="space-y-2 text-muted-foreground text-xs">
+                  <div className="flex gap-2">
+                    <span className="font-mono font-bold min-w-fit">1.</span>
+                    <p><strong>Client sends data to server:</strong> `await fakeApi.addTodo(inputValue)` - the server processes it and saves to the database.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-mono font-bold min-w-fit">2.</span>
+                    <p><strong>Server returns the result:</strong> the API responds with the created todo (or the full object with auto-generated fields like IDs, timestamps, etc.)</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-mono font-bold min-w-fit">3.</span>
+                    <p><strong>Client manually syncs Group 1:</strong> `setTodos([...prev, newTodo])` - you are telling React to update the local list to match what is now on the server.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-mono font-bold min-w-fit">4.</span>
+                    <p><strong>UI reflects server state:</strong> the user sees the new item in the list immediately, without a full page reload.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-background border p-4 text-sm text-muted-foreground space-y-3">
+                <p className="font-medium text-foreground">The key insight: You are coordinating client and server state manually</p>
+                <p>
+                  The server is the source of truth (the database is real; the client is temporary). When you do `setTodos([...prev, newTodo])`, you are saying: "I trust that what the server gave me matches what it actually stored. Update my local list to stay in sync with the server."
+                </p>
+                <p>
+                  If you did a full page refresh right after submission, Group 1 would fetch the list fresh from the server via a new API call. The list would be the same because the data is the same on the server — but you have manually kept the client in sync to avoid the reload.
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm space-y-3">
+                <p className="font-semibold text-destructive">Why this matters as complexity grows</p>
+                <ul className="text-muted-foreground space-y-2 text-xs">
+                  <li>
+                    <strong>Simple case (what you see here):</strong> one mutation, one update to Group 1. Easy to reason about.
+                  </li>
+                  <li>
+                    <strong>Real app case:</strong> mutations that affect multiple lists, computed fields, permissions, related data. Each one needs manual sync logic in Group 3.
+                  </li>
+                  <li>
+                    <strong>The consistency problem:</strong> if Group 3 forgets to update a piece of Group 1, or updates it with stale data, the client and server silently drift out of sync. The user sees outdated information.
+                  </li>
+                  <li>
+                    <strong>The race condition problem:</strong> what if the server state changed between when you read it and when you write the update? (Two users editing the same list, for example.)
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 p-4 text-sm space-y-3">
+                <p className="font-medium text-foreground">What this has to do with the patterns</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  In the <strong>Classic pattern</strong>, you coordinate this manually. Group 3 reads Group 2, sends to the server, gets a response, and manually updates Group 1.
+                </p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  In the <strong>Transition pattern</strong>, React simplifies Group 3's pending flag, but you still manually coordinate the sync with the server.
+                </p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  In the <strong>Actions pattern</strong> (coming next), this synchronization moves to the server. The server handles updating Group 1's data automatically, and the browser just needs to know "refresh this part of the UI." No more manual `setTodos([...prev, newItem])` — the server tells you what changed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="form-type" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-3">
             <h2 className="font-semibold">2. Form Type: Contact Form</h2>
