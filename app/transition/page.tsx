@@ -159,6 +159,193 @@ export default function TransitionPattern() {
           </p>
         </div>
 
+        <section className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">What Changes: Group 3 Orchestration with useTransition</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              In Classic, Group 3 had to manually manage the pending flag. In Transition, React handles it. But there's also a more subtle improvement: low-priority rendering.
+            </p>
+
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/40 border p-4">
+                <p className="font-medium text-foreground text-sm mb-3">Classic: Manual Pending Flag</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// GROUP 3: Submission state — YOU manage pending
+const [isSubmitting, setIsSubmitting] = useState(false)
+const [submitError, setSubmitError] = useState<string | null>(null)
+
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+  
+  // ... validation ...
+
+  setIsSubmitting(true)          // ← Manual: true
+  setSubmitError(null)
+  
+  try {
+    const newTodo = await fakeApi.addTodo(inputValue)
+    setTodos((prev) => [...prev, newTodo])  // Sync Group 1
+    setInputValue("")
+  } catch (e) {
+    setSubmitError(e instanceof Error ? e.message : "Failed")
+  } finally {
+    setIsSubmitting(false)       // ← Manual: false
+  }
+}`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+                <p className="font-medium text-foreground text-sm mb-3">Transition: React Manages Pending</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// GROUP 3: Submission state — React manages pending
+const [submitError, setSubmitError] = useState<string | null>(null)
+const [isPending, startTransition] = useTransition()  // ← React tracks this
+
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault()
+  
+  // ... validation ...
+
+  setSubmitError(null)
+  
+  startTransition(async () => {   // ← Wrap async work here
+    try {
+      const newTodo = await fakeApi.addTodo(inputValue)
+      setTodos((prev) => [...prev, newTodo])  // Sync Group 1
+      setInputValue("")
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Failed")
+    }
+    // ← No finally block needed; isPending is automatic
+  })
+}`}
+                </pre>
+              </div>
+
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+                  <p className="font-medium text-foreground">Classic Choreography</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    You call `setIsSubmitting(true)`, then `setIsSubmitting(false)`. React treats these as two separate state updates, potentially triggering two renders.
+                  </p>
+                  <pre className="overflow-x-auto text-xs text-foreground font-mono bg-background rounded p-2">
+{`setIsSubmitting(true)   // Render 1
+await api.call()
+setIsSubmitting(false)  // Render 2`}
+                  </pre>
+                </div>
+                <div className="rounded-lg border bg-green-50/50 dark:bg-green-950/20 p-4 space-y-2">
+                  <p className="font-medium text-foreground">Transition Choreography</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    React automatically derives `isPending` from the async work inside `startTransition()`. It knows when to be true and when to be false.
+                  </p>
+                  <pre className="overflow-x-auto text-xs text-foreground font-mono bg-background rounded p-2">
+{`startTransition(async () => {
+  await api.call()
+})  // isPending auto-managed`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">The Hidden Improvement: Low-Priority Rendering</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              `useTransition` does more than just derive the pending flag. It also marks updates inside `startTransition()` as low-priority. This means if the user types, clicks, or interacts with other parts of the UI, those actions get processed first, and the async mutation update gets deprioritized.
+            </p>
+
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/40 border p-4">
+                <p className="font-medium text-foreground text-sm mb-3">Classic: All Updates Have Same Priority</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// Classic doesn't distinguish priority
+await fakeApi.addTodo(inputValue)
+setTodos((prev) => [...prev, newTodo])  // ← High priority (like all state updates)
+
+// If user clicks button Y at the same moment, React might
+// process the todo update first, making button Y feel sluggish`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+                <p className="font-medium text-foreground text-sm mb-3">Transition: Mutations Are Low-Priority</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// Transition marks this whole block as low-priority
+startTransition(async () => {
+  await fakeApi.addTodo(inputValue)
+  setTodos((prev) => [...prev, newTodo])  // ← Low priority
+})
+
+// If user clicks button Y while this is running,
+// React processes button Y first, then continues with the todo update
+// Result: UI feels more responsive`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 p-4 text-sm space-y-3">
+                <p className="font-medium text-foreground">When you notice this</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  In a simple form like this demo, it is subtle. But on a page with rapid user interactions (typing, clicking, scrolling), transitions make the whole page feel snappier. The slow-running mutation does not block user input.
+                </p>
+              </div>
+
+              <div className="rounded-lg border bg-background p-4 text-sm text-muted-foreground space-y-3">
+                <p className="font-medium text-foreground">Important note: Transitions do not prevent race conditions</p>
+                <p className="text-xs leading-relaxed">
+                  Low-priority rendering is about UI responsiveness, not about ordering network requests. If two mutations start at nearly the same time, `useTransition` will not queue them or guarantee an order. That is why this page focuses on single mutations. The race condition demo handles this explicitly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">The Three Groups: What Stays the Same</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Group 3 got simpler (React handles pending), but Groups 1 and 2 are still your responsibility.
+            </p>
+
+            <div className="space-y-3">
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium text-foreground text-sm mb-2">Group 1: Read State (Still Manual)</p>
+                <p className="text-muted-foreground text-xs mb-2 leading-relaxed">
+                  After the mutation succeeds, you still manually sync Group 1:
+                </p>
+                <pre className="overflow-x-auto text-xs text-foreground font-mono bg-background rounded p-2">
+{`setTodos((prev) => [...prev, newTodo])  // Manual sync`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium text-foreground text-sm mb-2">Group 2: Form State (Still Manual)</p>
+                <p className="text-muted-foreground text-xs mb-2 leading-relaxed">
+                  Typing and client-side validation remain fully manual:
+                </p>
+                <pre className="overflow-x-auto text-xs text-foreground font-mono bg-background rounded p-2">
+{`const [inputValue, setInputValue] = useState("")
+const [validationError, setValidationError] = useState(null)`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg border bg-green-50/50 dark:bg-green-950/20 p-4">
+                <p className="font-medium text-foreground text-sm mb-2">Group 3: Submission State (Partially Automated)</p>
+                <p className="text-muted-foreground text-xs mb-2 leading-relaxed">
+                  Only the pending flag is automated. Error handling is still manual:
+                </p>
+                <pre className="overflow-x-auto text-xs text-foreground font-mono bg-background rounded p-2">
+{`const [isPending, startTransition] = useTransition()  // Automated ✓
+const [submitError, setSubmitError] = useState(null)   // Manual ✗`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={inputValue}
