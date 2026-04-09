@@ -110,7 +110,117 @@ async function ActionsContent() {
         </div>
 
         <div className="p-5 rounded-lg border bg-card space-y-4">
-          <h2 className="font-semibold">Key React 19 APIs Used</h2>
+          <h2 className="font-semibold">Analyzing Actions: Where Are the Three Groups Now?</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The three groups did not disappear in Actions. They are just distributed across the server, the browser, and React's form hooks. To understand how, apply the same analytical method from Classic:
+          </p>
+
+          <div className="rounded-lg bg-muted/40 border p-4 text-sm space-y-4">
+            <p className="font-medium text-foreground mb-2">Step 1: Separate the Buckets (Even If Blurred)</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-purple-500/20 border border-purple-500/30 px-3 py-2 min-w-fit font-mono font-semibold text-xs">Group 1</div>
+                <div className="flex-1 text-muted-foreground text-xs">
+                  <p className="font-medium text-foreground mb-1">Read State (On the Server Now)</p>
+                  <p>This page is a Server Component, so the initial todos list is fetched on the server during render and passed down as props.</p>
+                  <p className="mt-2 italic">Where:</p>
+                  <p>In the server code: `const initialTodos = getActionTodos()`</p>
+                  <p className="mt-2 italic">Why it matters:</p>
+                  <p>No useEffect needed. The browser gets HTML with the list already in it. No loading state to manage on the client.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-blue-500/20 border border-blue-500/30 px-3 py-2 min-w-fit font-mono font-semibold text-xs">Group 2</div>
+                <div className="flex-1 text-muted-foreground text-xs">
+                  <p className="font-medium text-foreground mb-1">Form State (Native Form Now)</p>
+                  <p>The input value is no longer a controlled React input. It is native form state owned by the browser.</p>
+                  <p className="mt-2 italic">Where:</p>
+                  <p>In the HTML form: `&lt;input name="todo" /&gt;` - the browser tracks this</p>
+                  <p className="mt-2 italic">Why it matters:</p>
+                  <p>No useState, no onChange, no preventDefault. The form works with or without JavaScript.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-green-500/20 border border-green-500/30 px-3 py-2 min-w-fit font-mono font-semibold text-xs">Group 3</div>
+                <div className="flex-1 text-muted-foreground text-xs">
+                  <p className="font-medium text-foreground mb-1">Submission State (useActionState + Server Action)</p>
+                  <p>Pending and errors are now managed by React form hooks, not separate useState calls.</p>
+                  <p className="mt-2 italic">Where:</p>
+                  <p>In the component: `const [state, formAction, isPending] = useActionState(serverAction, initialState)`</p>
+                  <p className="mt-2 italic">Why it matters:</p>
+                  <p>React automatically tracks when the action is running. Returned errors become available data in `state`.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/40 border p-4 text-sm space-y-4">
+            <p className="font-medium text-foreground mb-2">Step 2: Trace the Orchestration (Group 3's Job)</p>
+            
+            <p className="text-muted-foreground text-xs leading-relaxed mb-3">
+              Group 3 is still the orchestrator, but its plumbing has shifted. Instead of reading from client state and manually updating client state, it delegates to the server action and the form lifecycle.
+            </p>
+
+            <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`// Client Form Component
+const [state, formAction, isPending] = useActionState(addTodoAction, null)
+
+async function addTodoAction(prevState, formData) {
+  // SERVER SIDE - Group 3 orchestration now runs here
+  
+  // Read from Group 2: grab the input value from FormData
+  const todoText = formData.get("todo")
+  
+  // Validation (client-side style, pre-flight check)
+  if (!todoText.trim()) {
+    return { error: "Cannot be empty" }  // Return error
+  }
+  
+  // Send to database (the actual mutation)
+  const newTodo = await db.addTodo(todoText)
+  
+  // Update Group 1: the server-side list
+  // (Behind the scenes, this might revalidate a cache tag)
+  
+  // Return success
+  return { success: true, todo: newTodo }
+}
+
+// Meanwhile, in the form:
+// Group 2 (form state) is native: <input name="todo" />
+// Group 3 (submission) is managed: isPending, state.error
+// Group 1 (read state) comes from server component props`}
+            </pre>
+
+            <div className="mt-3 rounded-lg border bg-background p-3 text-xs text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">Key shift in orchestration:</p>
+              <ul className="space-y-1 ml-3">
+                <li>• Group 3 does NOT read from `inputValue` useState (no such thing)</li>
+                <li>• Group 3 reads from FormData, which is browser-native form state</li>
+                <li>• Group 3 does NOT call `setTodos([...prev, newTodo])` directly</li>
+                <li>• Instead, Group 3 (the action) runs on the server, updates the server data, and returns what changed</li>
+                <li>• React then re-renders with the new data automatically</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 p-4 text-sm space-y-3">
+            <p className="font-medium text-foreground">The blurring you mentioned: when UI looks simple but buckets are complex</p>
+            <p className="text-muted-foreground text-xs leading-relaxed mb-2">
+              A "+" button that adds an item is Group 2 (form state) at first glance, but alongside it sits a counter "5 items added" which is subtle Group 1 (read state derived from the mutation history). To analyze this:
+            </p>
+            <ul className="text-muted-foreground space-y-2 text-xs ml-3">
+              <li><strong>Separate first:</strong> "+" is form submission trigger, counter is read state</li>
+              <li><strong>Then trace:</strong> Does the button click orchestrate both updates? Yes → Group 3 coordinates them</li>
+              <li><strong>Then decide:</strong> Can I move this to Actions? Yes — the counter becomes a server-derived value on each response</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-lg border bg-card space-y-4">
           <div className="space-y-4 text-sm">
             <div>
               <h3 className="font-medium text-foreground">useActionState</h3>
