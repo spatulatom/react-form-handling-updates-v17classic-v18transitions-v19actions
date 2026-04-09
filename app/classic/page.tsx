@@ -180,7 +180,85 @@ export default function ClassicPattern() {
           </div>
         </section>
 
-        
+        <section className="space-y-4 scroll-mt-24">
+          <div className="rounded-lg border bg-card p-5 space-y-4">
+            <h2 className="font-semibold">How the Groups Work Together: Group 3 as Orchestrator</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The three buckets are separate for analytical clarity, but in practice, Group 3 (submission state) is the orchestrator that brings the other two together. It reads from Group 2, coordinates the mutation, updates Group 1, and resets Group 2.
+            </p>
+
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted/40 border p-4 text-sm space-y-3">
+                <p className="font-medium text-foreground">The Submission Choreography</p>
+                
+                <div className="space-y-3 text-muted-foreground text-xs">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-blue-500/20 border border-blue-500/30 px-3 py-2 min-w-fit font-mono font-semibold">Group 2</div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground mb-1">Group 3 reads from here</p>
+                      <p>The user's input value lives in Group 2. When submit happens, Group 3 grabs `inputValue` and sends it to the server.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-green-500/20 border border-green-500/30 px-3 py-2 min-w-fit font-mono font-semibold">Group 3</div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground mb-1">Does its own work</p>
+                      <p>`setIsSubmitting(true)` → make request → await response → `setIsSubmitting(false)`. This lifecycle is Group 3's responsibility.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-purple-500/20 border border-purple-500/30 px-3 py-2 min-w-fit font-mono font-semibold">Group 1</div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground mb-1">Group 3 updates this on success</p>
+                      <p>After the request succeeds, Group 3 writes the new item back to Group 1: `setTodos([...todos, newTodo])`. That triggers the re-render and the user sees the list update.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-blue-500/20 border border-blue-500/30 px-3 py-2 min-w-fit font-mono font-semibold">Group 2</div>
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground mb-1">Group 3 resets this on success</p>
+                      <p>Side effect after the mutation: `setInputValue("")` clears the form. This is Group 3 coordinating a cleanup of Group 2.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-muted/40 border p-4">
+                <p className="font-medium text-foreground text-sm mb-3">Visual: Data Flow During Submit</p>
+                <pre className="overflow-x-auto rounded bg-background p-3 text-xs text-foreground leading-relaxed">
+{`User types in form input
+         ↓
+    Group 2: inputValue = "Buy milk"
+         ↓
+    User clicks submit
+         ↓
+    Group 3 orchestrates:
+      ├─ Read from Group 2: grab inputValue
+      ├─ setIsSubmitting(true)
+      ├─ Send to server: await api.addTodo("Buy milk")
+      ├─ setIsSubmitting(false)
+      ├─ Update Group 1: setTodos([...todos, "Buy milk"])  ← list re-renders
+      └─ Reset Group 2: setInputValue("")  ← input clears
+         ↓
+    UI updates with new todo in list`}
+                </pre>
+              </div>
+
+              <div className="rounded-lg border bg-background p-4 text-sm text-muted-foreground space-y-3">
+                <p className="font-medium text-foreground">Why this framing matters</p>
+                <ul className="space-y-2 ml-3">
+                  <li>• Group 2 and Group 1 are passive—they hold state and re-render when it changes.</li>
+                  <li>• Group 3 is active—it's the only one that reads from other groups and coordinates multiple state updates.</li>
+                  <li>• Group 3 is where the submission logic lives: pending flag, error handling, the try/catch block.</li>
+                  <li>• Understanding Group 3 as the orchestrator explains why it's the hardest bucket to manage manually, and why newer React patterns focus on simplifying it.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section id="form-type" className="space-y-4 scroll-mt-24">
           <div className="rounded-lg border bg-card p-5 space-y-3">
