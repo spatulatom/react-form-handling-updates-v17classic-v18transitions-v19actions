@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+
 import Link from "next/link"
 import { TodoList } from "@/components/todo-list"
 import { getActionTodos } from "@/lib/native-store"
@@ -274,9 +274,9 @@ async function addTodoAction(prevState, formData) {
 export default function ActionsPattern() {
   return (
     <div className="min-h-screen bg-background p-8">
-      <Suspense fallback={<div className="mx-auto max-w-2xl text-sm text-muted-foreground">Loading...</div>}>
+      
         <ActionsContent />
-      </Suspense>
+      
     </div>
   )
 }
