@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import type { TodoActionState } from "./action-state"
-import { addActionTodo } from "@/lib/native-store"
+import { addActionTodo } from "@/app/actions/native-store"
 
 // The "use server" directive marks this entire file as server-only.
 // None of this code is included in the client JavaScript bundle.

@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { getItems } from "@/lib/native-store"
+import { getItems } from "@/app/actions/native-store"
 
 async function PostContent({ searchParams }: { searchParams: Promise<{ added?: string }> }) {
   const { added } = await searchParams

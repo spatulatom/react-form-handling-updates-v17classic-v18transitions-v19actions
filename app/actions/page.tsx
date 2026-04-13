@@ -1,7 +1,7 @@
 
 import Link from "next/link"
-import { TodoList } from "@/components/todo-list"
-import { getActionTodos } from "@/lib/native-store"
+import { TodoList } from "@/app/actions/todo-list"
+import { getActionTodos } from "@/app/actions/native-store"
 
 async function ActionsContent() {
   const initialTodos = getActionTodos()
