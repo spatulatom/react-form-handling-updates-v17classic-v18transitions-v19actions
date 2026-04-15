@@ -248,16 +248,73 @@ export default function ProgressiveEnhancementPage() {
           </p>
         </div>
 
-        {/* Current state of this project */}
-        <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 text-sm space-y-2">
-          <p className="font-semibold text-amber-700 dark:text-amber-300">Current state of this demo</p>
-          <p className="text-muted-foreground leading-relaxed">
-            The <Link href="/actions" className="underline underline-offset-4">/actions</Link> page
-            does not currently call <code className="bg-muted px-1 rounded">redirect()</code> on a
-            successful add. That means the no-JS success path (A1) has the double-submit risk described
-            above. The error path works correctly — validation failure returns an error object, Next.js
-            re-renders inline, browser gets a 200 with the error in the HTML. The JS-enhanced path (B1)
-            is unaffected since React never leaves a POST in browser history.
+        {/* redirect vs success state */}
+        <div className="p-5 rounded-lg border bg-card space-y-4">
+          <h2 className="font-semibold">The Redirect–Success State Trade-off</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Once you know that <code className="bg-muted px-1 rounded">redirect()</code> throws rather than returns,
+            a natural question follows: can the action still signal explicit success back to the form? The short answer is no — and the reason is mechanical, not a framework limitation.
+          </p>
+
+          <div className="rounded-lg bg-muted/40 border p-4 text-xs font-mono text-foreground space-y-1">
+            <p className="font-sans text-sm font-medium text-foreground mb-2">Why redirect() blocks success state:</p>
+            <p>{`addTodoAction() calls redirect("/actions")`}</p>
+            <p className="text-muted-foreground pl-4">↓ redirect() throws internally</p>
+            <p className="text-muted-foreground pl-4">↓ action never reaches a return statement</p>
+            <p className="text-muted-foreground pl-4">↓ useActionState receives no new value</p>
+            <p className="text-muted-foreground pl-4">↓ state stays unchanged — not reset, just never updated</p>
+            <p>{`// state.success can never be set`}</p>
+          </div>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            This holds in <strong>both</strong> the A (no-JS) and B (JS-enhanced) paths. In the JS path, soft navigation
+            means the component is not remounted — React reconciles the tree. But that does not help: the
+            component survived the navigation with its old state intact, because <code className="bg-muted px-1 rounded">useActionState</code> never
+            received a return value to update from. Surviving a navigation is not the same as receiving new state.
+          </p>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The full hook landscape confirms this is not a gap in one hook:
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+            <li>• <code className="bg-muted px-1 rounded">useActionState</code> — <code className="bg-muted px-1 rounded">state</code> is the action's return value. No return = no update.</li>
+            <li>• <code className="bg-muted px-1 rounded">useFormStatus</code> — surfaces <code className="bg-muted px-1 rounded">pending</code> and submitted <code className="bg-muted px-1 rounded">data</code> while the action is in flight. Cleared on navigation.</li>
+            <li>• <code className="bg-muted px-1 rounded">useOptimistic</code> — optimistic UI during the action. Also tied to the action lifecycle, reset when it ends.</li>
+          </ul>
+          <p className="text-sm text-muted-foreground">None of these hooks have a post-redirect channel. The binary is genuine:</p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">Approach</th>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">Explicit success message</th>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">PRG (no double-submit)</th>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">No-JS safe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="p-3 border font-mono">redirect() on success</td>
+                  <td className="p-3 border text-red-500">✗</td>
+                  <td className="p-3 border text-green-600">✓</td>
+                  <td className="p-3 border text-green-600">✓</td>
+                </tr>
+                <tr>
+                  <td className="p-3 border font-mono">{`return { success: true }`}</td>
+                  <td className="p-3 border text-green-600">✓</td>
+                  <td className="p-3 border text-red-500">✗</td>
+                  <td className="p-3 border text-amber-600">⚠ refresh resubmits</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Workarounds exist (flash cookie, <code className="bg-muted px-1 rounded">?added=1</code> URL param) but they are not hook-native — they require reading
+            server-set state on the subsequent GET. The current <Link href="/actions" className="underline underline-offset-4">/actions</Link> demo
+            uses <code className="bg-muted px-1 rounded">redirect()</code>, so success is inferred from the list updating rather than shown explicitly.
+            For a JS-only audience the <code className="bg-muted px-1 rounded">return {`{ success: true }`}</code> approach is the cleaner teaching choice.
           </p>
         </div>
 

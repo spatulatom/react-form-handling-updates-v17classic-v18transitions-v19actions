@@ -65,6 +65,11 @@ async function ActionsContent() {
             <p className="font-medium text-foreground">Group 3: Submission State</p>
             <p>Pending and returned errors are managed by React's form hooks instead of separate useState pairs.</p>
             <p>The mutation still exists. It is just delegated to useActionState, useFormStatus, and the server action.</p>
+            <p className="text-xs text-muted-foreground/70 italic border-t pt-2 mt-1">
+              Note: explicit success state is not available when the action calls redirect() — the action throws before returning,
+              so useActionState never receives a new value. Success is inferred from the list updating.
+              See <Link href="/actions/progressive" className="underline underline-offset-2">JS boundary page</Link> for the full trade-off.
+            </p>
           </div>
         </div>
 
