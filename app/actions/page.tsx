@@ -1,10 +1,10 @@
 
 import Link from "next/link"
-import { TodoList } from "@/app/actions/todo-list"
+import { TodoForm } from "@/app/actions/todo-form"
 import { getActionTodos } from "@/app/actions/native-store"
 
 async function ActionsContent() {
-  const initialTodos = getActionTodos()
+  const todos = getActionTodos()
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -108,8 +108,8 @@ async function ActionsContent() {
               an error for useActionState to render.
             </li>
             <li>
-              <strong>• Some client state can still be useful</strong> - TodoList keeps a small local list state so the
-              JavaScript-enhanced path can append immediately after success.
+              <strong>• The list refreshes via revalidatePath</strong> - after a successful action, the server re-renders
+              the list fresh from the store. No client list state needed.
             </li>
           </ul>
         </div>
@@ -251,7 +251,14 @@ async function addTodoAction(prevState, formData) {
           </div>
         </div>
 
-        <TodoList initialTodos={initialTodos} />
+        <div className="space-y-4">
+          <TodoForm />
+          <ul className="space-y-2" aria-label="Todo list">
+            {todos.map((todo, i) => (
+              <li key={`${todo}-${i}`} className="p-3 rounded bg-muted text-sm">{todo}</li>
+            ))}
+          </ul>
+        </div>
 
         <div className="p-5 rounded-lg border bg-card space-y-3">
           <h2 className="font-semibold">With JS vs Without JS</h2>
