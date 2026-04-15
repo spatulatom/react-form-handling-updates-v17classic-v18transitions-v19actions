@@ -14,6 +14,36 @@ export default function ProgressiveEnhancementPage() {
           <p className="text-muted-foreground">How the same server action behaves with and without JavaScript</p>
         </div>
 
+        {/* Foundation insight */}
+        <div className="p-5 rounded-lg border border-sky-500/30 bg-sky-500/5 space-y-4">
+          <h2 className="font-semibold text-sky-700 dark:text-sky-300">The insight that makes everything else click</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            In a classic Express/REST setup, a form POST hits an <strong>API endpoint</strong> — a separate handler
+            that returns data. A different request then loads the page UI. The action and the page are two distinct things.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Next.js Server Actions work differently. There is <strong>no API endpoint</strong>. The server action
+            function has no URL of its own — it cannot be curled or hit directly. Instead, the POST goes to the
+            <strong> page route</strong> (e.g. <code className="bg-sky-500/10 px-1 rounded">/actions</code>), and
+            Next.js decides what to do based on a hidden <code className="bg-sky-500/10 px-1 rounded">$ACTION_ID</code> field
+            baked into the form HTML:
+          </p>
+          <div className="rounded-lg bg-muted/40 border p-4 text-xs font-mono text-foreground space-y-1">
+            <p>GET  /actions          → render the page normally</p>
+            <p>POST /actions          → read $ACTION_ID from body:</p>
+            <p className="pl-4">→ run the mapped action function</p>
+            <p className="pl-4">→ then render the page with the result injected</p>
+            <p className="pl-4 text-muted-foreground">   (or redirect, if the action calls redirect())</p>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The route is both the <strong>action handler</strong> and the <strong>renderer</strong> — one pipeline,
+            not two. This is what makes the no-JS error path possible in a single round trip: the POST arrives,
+            the action runs, the page renders with the error baked in, and the full HTML goes back as the response
+            to that same POST. From the browser's perspective it just got a page back from a POST — which looks
+            strange through an Express lens, but is exactly how this model is designed to work.
+          </p>
+        </div>
+
         {/* 2x2 model */}
         <div className="p-5 rounded-lg border bg-card space-y-4">
           <h2 className="font-semibold">The 2×2 Mental Model</h2>
@@ -85,28 +115,59 @@ export default function ProgressiveEnhancementPage() {
           <p className="text-sm text-muted-foreground leading-relaxed">
             When the browser submits without JS, the POST body contains the form fields <em>plus</em> that
             hidden <code className="bg-muted px-1 rounded">$ACTION_ID</code> field. Next.js reads it on the server,
-            looks up the corresponding action function, and runs it.
+            looks up the corresponding action function, and runs it. What happens next depends entirely on
+            whether validation passes or fails — and the two paths are mechanically opposite.
           </p>
 
-          <div className="rounded-lg bg-muted/40 border p-4 text-xs space-y-2 font-mono text-foreground leading-relaxed">
-            <p className="font-sans font-medium text-sm text-foreground mb-3">The no-JS submit cycle, step by step:</p>
-            <p>1. Browser POSTs to /actions</p>
-            <p>2. Next.js reads $ACTION_ID → identifies addTodoAction</p>
-            <p>3. Runs addTodoAction(initialState, formData)</p>
-            <p>4. Action returns {"{ error: \"Server rejected this todo\" }"}</p>
-            <p className="text-muted-foreground">   ↑ plain JS object, still on the server</p>
-            <p>5. Next.js re-renders the component tree server-side,</p>
-            <p>   injecting that object as the current useActionState value</p>
-            <p>6. TodoForm renders: state.error → {"<p>Server rejected this todo</p>"}</p>
-            <p>7. Next.js sends the finished HTML as the POST response body (200)</p>
-            <p>8. Browser paints it — error is already in the HTML</p>
+          {/* Error path */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Error path — one round trip</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The response the browser receives is the reply to the original POST itself — not a redirect to
+              the page route. Next.js runs the action, gets the error object back, immediately re-renders the
+              component tree on the server with that error injected, and sends the resulting HTML as the POST
+              response body. The browser never makes a second request. There is no gap between the action
+              returning and the render seeing the value — they happen in the same request handler, the error
+              object just passes from one function call to the next in memory.
+            </p>
+            <div className="rounded-lg bg-muted/40 border p-4 text-xs font-mono text-foreground leading-relaxed space-y-1">
+              <p>Browser: POST /actions (todo=error)</p>
+              <p className="pl-4 text-muted-foreground">↓ Next.js handles POST</p>
+              <p className="pl-4">addTodoAction() → returns {"{ error: \"Server rejected\" }"}</p>
+              <p className="pl-4 text-muted-foreground">↓ same request, no gap</p>
+              <p className="pl-4">Next.js re-renders page with error injected into useActionState</p>
+              <p className="pl-4 text-muted-foreground">↓</p>
+              <p>Browser: receives 200 HTML — error is already baked in</p>
+            </div>
+          </div>
+
+          {/* Success path */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Success path — two round trips</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The action mutates the store, calls <code className="bg-muted px-1 rounded">revalidatePath</code>,
+              then <code className="bg-muted px-1 rounded">redirect()</code> throws — ending the action without
+              returning a value. Next.js sends a 303 to the browser. The browser follows it with a brand new
+              GET request to <code className="bg-muted px-1 rounded">/actions</code>. That GET renders the page
+              fresh from the server — the updated list comes from the store, not from any carried-over state.
+              The POST response and the page HTML come from two completely separate requests.
+            </p>
+            <div className="rounded-lg bg-muted/40 border p-4 text-xs font-mono text-foreground leading-relaxed space-y-1">
+              <p>Browser: POST /actions (todo=Buy milk)</p>
+              <p className="pl-4 text-muted-foreground">↓ Next.js handles POST</p>
+              <p className="pl-4">addTodoAction() → mutates store → revalidatePath → redirect throws</p>
+              <p className="pl-4 text-muted-foreground">↓</p>
+              <p>Browser: receives 303 → initiates GET /actions</p>
+              <p className="pl-4 text-muted-foreground">↓ Next.js handles GET — fresh render, no action state</p>
+              <p>Browser: receives 200 HTML — list includes new item from store</p>
+            </div>
           </div>
 
           <p className="text-sm text-muted-foreground leading-relaxed">
-            The error never travelled through a URL or cookie. It moved from the action's return value
-            directly into the render as a plain in-memory JavaScript object passed between two function
-            calls on the server — in the same request handling cycle. This is the same thing PHP did in 1998,
-            just through a modern component-based mechanism.
+            This is why the error path does not need PRG — there was only one request, nothing to protect
+            against replaying. And it is why the error message needs no URL param or cookie — it never left
+            the server. The same mechanism is what PHP did in 1998: validate, and if invalid, echo the form
+            back with the error inline. Next.js just wires it through a component tree instead of a flat script.
           </p>
         </div>
 
