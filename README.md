@@ -38,18 +38,22 @@ Open [http://localhost:3000](http://localhost:3000) to explore the patterns.
 
 ```
 app/
-├── page.tsx                    # Main landing page
-├── classic/page.tsx            # Classic pattern demo
-├── transition/page.tsx         # Transition pattern demo
-├── actions/page.tsx            # Actions pattern demo
-├── race/                        # Race condition examples
+├── page.tsx                          # Main landing page
+├── classic/page.tsx                  # Classic pattern demo
+├── transition/page.tsx               # Transition pattern demo
+├── actions/
+│   ├── page.tsx                      # Actions pattern demo
+│   ├── actions.ts                    # Server action ("use server")
+│   ├── todo-form.tsx                 # Client island (useActionState + useFormStatus)
+│   ├── action-state.ts               # Shared state type
+│   ├── native-store.ts               # In-memory store (globalThis)
+│   └── progressive/page.tsx          # JS boundary reference page
+├── race/                             # Race condition examples
 │   ├── classic/page.tsx
 │   ├── transition/page.tsx
 │   └── actions/page.tsx
 components/
-├── todo-form.tsx               # Reusable form component
-├── todo-list.tsx               # Todo list display
-└── ui/                         # UI components (button, input, card, badge)
+└── ui/                               # UI components (button, input, card, badge)
 ```
 
 ## Patterns Explained
@@ -97,16 +101,20 @@ Leverages React 18's `useTransition` hook to simplify the pending part of Group 
 
 Uses Next.js Server Actions so Group 1 can be read on the server, Group 2 can stay in native form state, and Group 3 can flow through React's form hooks.
 
+The `/actions` folder is the canonical reference implementation: a `"use server"` action file, a minimal client island (`TodoForm`), and a Server Component page that fetches the list at render time. The list stays fresh via `revalidatePath` — no client `useState` list needed. On success the action calls `redirect("/actions")`, which gives no-JS submits a proper PRG 303 and gives JS-enhanced submits a soft `router.push()` — same line of code, two behaviours.
+
+See [app/actions/progressive/page.tsx](app/actions/progressive/page.tsx) for a full explanation of how the same action behaves with and without JavaScript, including the 2×2 mental model (no-JS/JS × same-page/different-page), the `$ACTION_ID` mechanism, and why the error path needs no redirect while the success path does.
+
 **Strengths:**
 
 - Server-side execution by default
-- Built-in pending and returned-error flow
-- Less manual coordination inside Group 3
+- Built-in pending and returned-error flow via `useActionState` + `useFormStatus`
+- No client list state — `revalidatePath` keeps the list fresh
+- Progressive enhancement: works without JavaScript via the permalink + `$ACTION_ID` mechanism
 
 **Weaknesses:**
 
 - More distributed architecture across server, browser, and client components
-- Under Cache Components, the `/actions` route is partially prerendered and mainly demonstrates the hydrated flow
 - Learning curve for developers new to Server Actions
 
 **Note on Cache Components:** This repo keeps Cache Components enabled. The true native no-JavaScript baseline is demonstrated on the HTML form pages under `/native`, while `/actions` shows the React 19 Actions model inside a partially prerendered route.
@@ -149,8 +157,9 @@ pnpm dev --turbo
 
 ## Technologies
 
-- **Next.js 14+** - React framework for production
+- **Next.js 15+** - React framework for production
 - **React 18+** - UI library with hooks support
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Utility-first styling
 - **shadcn/ui** - Accessible UI components
+- **Turbopack** - Fast development builds
