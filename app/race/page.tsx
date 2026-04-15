@@ -93,6 +93,109 @@ export default function RacePage() {
           </p>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Patterns vs Race Conditions</CardTitle>
+          <CardDescription>
+            Not every pattern in this project is vulnerable. The full picture depends on whether the browser,
+            React, or your own code is doing the serializing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 text-sm">
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">Pattern / scenario</th>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">Race immune?</th>
+                  <th className="text-left p-3 border bg-muted/50 font-medium">Why</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="p-3 border font-medium">Native GET (single fetch on mount)</td>
+                  <td className="p-3 border text-green-600 font-medium">✓ Yes</td>
+                  <td className="p-3 border text-muted-foreground">One request fires once. Nothing to race against.</td>
+                </tr>
+                <tr className="bg-muted/20">
+                  <td className="p-3 border font-medium">Native POST — no JS (browser form submit)</td>
+                  <td className="p-3 border text-green-600 font-medium">✓ Yes</td>
+                  <td className="p-3 border text-muted-foreground">
+                    The browser replaces the page on submit. While navigating, the form is gone — you cannot fire a
+                    second POST. One request at a time by the browser's navigation lifecycle.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-3 border font-medium">Server action — no JS (A1 / A2)</td>
+                  <td className="p-3 border text-green-600 font-medium">✓ Yes</td>
+                  <td className="p-3 border text-muted-foreground">
+                    Same mechanism as native POST. The POST goes to the page route, browser navigates away, form is
+                    unreachable until the response arrives. Browser navigation is the serializer.
+                  </td>
+                </tr>
+                <tr className="bg-muted/20">
+                  <td className="p-3 border font-medium">
+                    Server action — with JS (<code className="bg-muted px-1 rounded">useActionState</code>)
+                  </td>
+                  <td className="p-3 border text-green-600 font-medium">✓ Yes</td>
+                  <td className="p-3 border text-muted-foreground">
+                    React maintains an internal action queue. While <code className="bg-muted px-1 rounded">isPending</code> is
+                    true, new submissions are enqueued — not fired concurrently. Each action runs after the previous
+                    one resolves and receives <code className="bg-muted px-1 rounded">prevState</code> from it.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-3 border font-medium">
+                    Classic <code className="bg-muted px-1 rounded">useState</code> + async handler
+                  </td>
+                  <td className="p-3 border text-red-500 font-medium">✗ No</td>
+                  <td className="p-3 border text-muted-foreground">
+                    Multiple <code className="bg-muted px-1 rounded">fetch()</code> calls fire concurrently.
+                    Responses arrive in unpredictable order. Whichever resolves last overwrites the UI —
+                    even if it was sent first.
+                  </td>
+                </tr>
+                <tr className="bg-muted/20">
+                  <td className="p-3 border font-medium">
+                    <code className="bg-muted px-1 rounded">useTransition</code> alone
+                  </td>
+                  <td className="p-3 border text-red-500 font-medium">✗ No</td>
+                  <td className="p-3 border text-muted-foreground">
+                    <code className="bg-muted px-1 rounded">isPending</code> is a <em>rendering</em> primitive — it
+                    tells React to deprioritise the UI update, not to block the network request.
+                    Five rapid clicks still fire five concurrent fetches. The race is the same as Classic,
+                    and arguably harder to spot because <code className="bg-muted px-1 rounded">isPending</code> looks like a guard.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-3 border font-medium">
+                    <code className="bg-muted px-1 rounded">useTransition</code> + <code className="bg-muted px-1 rounded">AbortController</code>
+                  </td>
+                  <td className="p-3 border text-green-600 font-medium">✓ Yes</td>
+                  <td className="p-3 border text-muted-foreground">
+                    Explicitly cancel the previous in-flight request before starting the next one.
+                    This has to be wired manually — it is not built into <code className="bg-muted px-1 rounded">useTransition</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-4 space-y-2">
+            <p className="font-medium text-sky-700 dark:text-sky-300">The key insight</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Race immunity always comes from a <strong>serializer</strong> — something that guarantees only one
+              request is in flight at a time. The serializer is either the browser's navigation lifecycle (native
+              forms), React's action queue (<code className="bg-muted px-1 rounded">useActionState</code>), or
+              explicit manual cancellation (<code className="bg-muted px-1 rounded">AbortController</code>).
+              If none of those are present, concurrent fetches are possible and the race condition is real.
+            </p>
+          </div>
+
+        </CardContent>
+      </Card>
     </div>
   )
 }
