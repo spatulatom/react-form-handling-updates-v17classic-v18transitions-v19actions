@@ -8,9 +8,14 @@ async function ActionsContent() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/" className="text-sm text-muted-foreground hover:underline">
-          ← Back
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-sm text-muted-foreground hover:underline">
+            ← Back
+          </Link>
+          <Link href="/actions/progressive" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors">
+            JS boundary →
+          </Link>
+        </div>
 
         <div>
           <h1 className="text-2xl font-bold">Actions Pattern</h1>
@@ -256,6 +261,9 @@ async function addTodoAction(prevState, formData) {
             through Suspense, so the plain no-JS baseline is better represented by <code className="bg-muted px-1 rounded">/native/post</code>
             than by this hydrated Actions demo.
           </p>
+          <Link href="/actions/progressive" className="inline-block text-sm underline underline-offset-4 text-muted-foreground hover:text-foreground transition-colors">
+            How this action behaves across the JS boundary →
+          </Link>
         </div>
 
         {/* Navigation between patterns */}
