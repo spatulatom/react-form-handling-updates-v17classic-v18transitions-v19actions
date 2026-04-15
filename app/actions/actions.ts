@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import type { TodoActionState } from "./action-state"
 import { addActionTodo } from "@/app/actions/native-store"
 
@@ -25,16 +26,17 @@ export async function addTodoAction(prevState: TodoActionState, formData: FormDa
 
   // Validation - in a real app you'd use zod or similar
   if (!todo?.trim()) {
-    return { error: "Todo cannot be empty", todo: null, requestId: prevState.requestId + 1 }
+    return { error: "Todo cannot be empty" }
   }
 
   // Simulate server error for demo purposes
   if (todo.toLowerCase().includes("error")) {
-    return { error: "Server rejected this todo", todo: null, requestId: prevState.requestId + 1 }
+    return { error: "Server rejected this todo" }
   }
 
-  const savedTodo = addActionTodo(todo)
+  addActionTodo(todo)
   revalidatePath("/actions")
-
-  return { error: null, todo: savedTodo, requestId: prevState.requestId + 1 }
+  // redirect() throws internally — Next.js converts it to a 303 for no-JS
+  // and a soft router.push() for JS-enhanced. PRG prevents refresh-resubmit.
+  redirect("/actions")
 }

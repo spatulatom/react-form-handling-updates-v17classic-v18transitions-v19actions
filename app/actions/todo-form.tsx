@@ -1,15 +1,15 @@
 
+"use client"
 
-import { useActionState, useEffect, useRef } from "react"
+import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import { initialTodoActionState } from "@/app/actions/action-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addTodoAction } from "@/app/actions/actions"
 
-// Extracted submit button - useFormStatus must be in child of form
+// useFormStatus must be called from inside the <form> tree
 function SubmitButton() {
-  // This hook only works inside a <form> - it reads the form's pending state
   const { pending } = useFormStatus()
 
   return (
@@ -19,26 +19,10 @@ function SubmitButton() {
   )
 }
 
-type Props = {
-  onSuccess: (todo: string) => void
-}
-
-export function TodoForm({ onSuccess }: Props) {
+export function TodoForm() {
+  // Third arg "/actions" is the permalink — bakes the action URL into the HTML
+  // for the no-JS path. Without it, submitting with JS disabled has no target.
   const [state, formAction] = useActionState(addTodoAction, initialTodoActionState, "/actions")
-  const handledRequestIdRef = useRef(0)
-
-  useEffect(() => {
-    if (!state.todo) {
-      return
-    }
-
-    if (state.requestId === handledRequestIdRef.current) {
-      return
-    }
-
-    handledRequestIdRef.current = state.requestId
-    onSuccess(state.todo)
-  }, [onSuccess, state.requestId, state.todo])
 
   return (
     <div className="space-y-3">
