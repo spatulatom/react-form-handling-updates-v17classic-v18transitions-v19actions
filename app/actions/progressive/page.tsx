@@ -17,6 +17,9 @@ export default function ProgressiveEnhancementPage() {
         {/* Foundation insight */}
         <div className="p-5 rounded-lg border border-sky-500/30 bg-sky-500/5 space-y-4">
           <h2 className="font-semibold text-sky-700 dark:text-sky-300">The insight that makes everything else click</h2>
+          <p className="text-sm font-medium text-foreground">
+            You POST the form and the response body <em>is</em> the updated page — in one round trip. The action and the render share the same request.
+          </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             In a classic Express/REST setup, a form POST hits an <strong>API endpoint</strong> — a separate handler
             that returns data. A different request then loads the page UI. The action and the page are two distinct things.
