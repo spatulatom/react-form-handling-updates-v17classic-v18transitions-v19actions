@@ -6,7 +6,7 @@ export default function ProgressiveEnhancementPage() {
       <div className="max-w-2xl mx-auto space-y-6">
 
         <Link href="/actions" className="text-sm text-muted-foreground hover:underline">
-          ← Back to Actions Pattern
+          ← Back to Actions Pattern!
         </Link>
 
         <div>
