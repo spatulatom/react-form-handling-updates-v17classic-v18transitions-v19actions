@@ -318,6 +318,61 @@ export default function ProgressiveEnhancementPage() {
           </p>
         </div>
 
+        {/* useActionState without a server action */}
+        <div className="p-5 rounded-lg border bg-card space-y-4">
+          <h2 className="font-semibold">useActionState Without a Server Action</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <code className="bg-muted px-1 rounded">useActionState</code> accepts <strong>any async function</strong> —
+            the function does not need <code className="bg-muted px-1 rounded">{"\"use server\""}</code>. You can wire it to
+            a plain client-side async function and still get most of the ergonomics.
+          </p>
+
+          <div className="rounded-lg bg-muted/40 border p-4 text-xs font-mono text-foreground space-y-1">
+            <p className="font-sans text-sm font-medium text-foreground mb-2">Client-only action — no "use server":</p>
+            <p>{`const clientAction = async (prev, formData) => {`}</p>
+            <p className="pl-4">{`const todo = formData.get("todo")`}</p>
+            <p className="pl-4">{`if (!todo?.trim()) return { error: "Cannot be empty" }`}</p>
+            <p className="pl-4">{`await fetch("/api/todos", { method: "POST", body: formData })`}</p>
+            <p className="pl-4">{`return { error: null }`}</p>
+            <p>{`}`}</p>
+            <p className="mt-2 text-muted-foreground">{`// No permalink — third arg omitted`}</p>
+            <p>{`const [state, formAction] = useActionState(clientAction, { error: null })`}</p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 text-sm">
+            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 space-y-2">
+              <p className="font-medium text-foreground">Still preserved</p>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <strong>No race conditions</strong> — React serializes concurrent submits regardless of whether the action hits a server. This is a React scheduler guarantee, not a server feature.</li>
+                <li>• <strong>Declarative pending state</strong> — <code className="bg-muted px-1 rounded">useFormStatus</code> still works inside the form tree.</li>
+                <li>• <strong>State-as-return-value</strong> — error rendering and state threading work identically.</li>
+                <li>• No manual <code className="bg-muted px-1 rounded">e.preventDefault()</code> needed.</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4 space-y-2">
+              <p className="font-medium text-foreground">Lost entirely</p>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <strong>Progressive enhancement</strong> — no permalink, no server handler at the POST URL. The form is dead without JS. No A-path exists.</li>
+                <li>• <strong>revalidatePath / cache invalidation</strong> — client actions cannot call these. You need a manual <code className="bg-muted px-1 rounded">router.refresh()</code> or equivalent.</li>
+                <li>• <strong>Server-side validation</strong> — validation logic ships to the client and is visible to anyone.</li>
+                <li>• <strong>Direct server mutation</strong> — you need to go through a fetch to an API route instead of calling the function directly.</li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            This pattern makes sense for forms where the data never leaves the client — search filters, multi-step
+            wizards, local state machines. You get the <code className="bg-muted px-1 rounded">useActionState</code> ergonomics
+            (queuing, pending, state-as-return-value) without the server overhead, and you are not pretending the form
+            works without JS because it was never designed to.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The progressive enhancement story in the cells above is specifically the
+            <code className="bg-muted px-1 rounded mx-1">{"\"use server\""}</code> + permalink combination.
+            Lose the server action, lose that story — but the concurrency model stays intact.
+          </p>
+        </div>
+
         <div className="flex gap-3 pt-8 border-t justify-between">
           <Link href="/actions" className="px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
             ← Actions Pattern
