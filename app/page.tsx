@@ -6,8 +6,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-foreground">React Form Handling Evolution</h1>
-        <p className="text-muted-foreground">See how form handling evolved from React 17 → 18 → 19</p>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">React Form Handling Evolution</h1>
+            <p className="text-muted-foreground mt-1">See how form handling evolved from React 17 → 18 → 19</p>
+          </div>
+          <Link
+            href="/about"
+            className="px-4 py-2 text-sm rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            ℹ️ About this project
+          </Link>
+        </div>
 
         {/* Chapter 0 — Before React */}
         <div className="space-y-2">
