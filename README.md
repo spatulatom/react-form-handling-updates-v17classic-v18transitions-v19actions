@@ -1,16 +1,19 @@
 # React Form Handling: Next.js Patterns
 
-An interactive learning guide exploring three fundamental patterns for handling asynchronous operations and form submissions in Next.js applications. Compare the strengths, weaknesses, and trade-offs of each pattern through side-by-side examples.
+An interactive learning guide exploring the evolution of form-handling patterns in Next.js — from plain HTML forms through React 17 classic state management, React 18 transitions, and React 19 Server Actions. Compare the strengths, weaknesses, and trade-offs of each approach through side-by-side, runnable examples.
+
+> **New:** visit [`/about`](http://localhost:3000/about) in the running app for an in-app guide covering the project purpose, full site map, page relationships, and key concept glossary.
 
 ## Overview
 
-This project demonstrates how to handle async work in forms using three distinct patterns:
+This project demonstrates how to handle async work in forms using four chapters of increasing abstraction:
 
-- **Classic Pattern**: Manual state management with `useState` and `useEffect`
-- **Transition Pattern**: React 18's `useTransition` hook for shrinking the manual submission bucket
-- **Actions Pattern**: Next.js Server Actions for server-side ownership and hydrated form actions
+- **Chapter 0 — Native HTML**: Plain `<form>` elements, full-page round-trips, the PRG pattern, zero JavaScript
+- **Chapter 1 — Classic Pattern**: Manual state management with `useState` and `useEffect`
+- **Chapter 2 — Transition Pattern**: React 18's `useTransition` hook for shrinking the manual submission bucket
+- **Chapter 3 — Actions Pattern**: Next.js Server Actions for server-side ownership and hydrated form actions
 
-Each pattern solves the same problem—managing a todo form—but with different trade-offs and architectural approaches.
+Each React pattern solves the same problem — managing a todo create form — but with different trade-offs and architectural approaches.
 
 Across all three pages, the app uses the same mental model:
 
@@ -38,25 +41,52 @@ Open [http://localhost:3000](http://localhost:3000) to explore the patterns.
 
 ```
 app/
-├── page.tsx                          # Main landing page
-├── classic/page.tsx                  # Classic pattern demo
-├── transition/page.tsx               # Transition pattern demo
-├── actions/
-│   ├── page.tsx                      # Actions pattern demo
-│   ├── actions.ts                    # Server action ("use server")
+├── page.tsx                          # Landing page — pattern overview
+├── about/page.tsx                    # About page — project structure & sitemap
+├── native/                           # Chapter 0 — Native HTML Forms (zero JS)
+│   ├── layout.tsx                    # Shared nav for all /native routes
+│   ├── page.tsx                      # Overview
+│   ├── get/page.tsx                  # GET form → URL query string demo
+│   ├── post/page.tsx                 # POST form → PRG pattern demo
+│   └── redirect/page.tsx             # Redirect mechanics (301/302/303 + Next.js)
+├── classic/page.tsx                  # Chapter 1 — Classic pattern (useState + useEffect)
+├── transition/page.tsx               # Chapter 2 — Transition pattern (useTransition)
+├── actions/                          # Chapter 3 — Actions pattern (Server Actions)
+│   ├── page.tsx                      # Server Component page (reads list server-side)
+│   ├── actions.ts                    # "use server" action file
 │   ├── todo-form.tsx                 # Client island (useActionState + useFormStatus)
-│   ├── action-state.ts               # Shared state type
+│   ├── action-state.ts               # Shared ActionState type
 │   ├── native-store.ts               # In-memory store (globalThis)
-│   └── progressive/page.tsx          # JS boundary reference page
+│   └── progressive/page.tsx          # JS enhancement & $ACTION_ID deep-dive
 ├── race/                             # Race condition examples
-│   ├── classic/page.tsx
-│   ├── transition/page.tsx
-│   └── actions/page.tsx
+│   ├── layout.tsx                    # Shared nav for all /race routes
+│   ├── page.tsx                      # Race condition overview
+│   ├── classic/page.tsx              # Classic — broken (responses arrive out of order)
+│   ├── transition/page.tsx           # Transition — better (serialized but not immune)
+│   └── actions/page.tsx              # Actions — solved (queued by the actions model)
+└── api/
+    └── native-post/route.ts          # Route Handler backing the /native/post demo
 components/
-└── ui/                               # UI components (button, input, card, badge)
+└── ui/                               # shadcn/ui components (button, input, card, badge …)
 ```
 
 ## Patterns Explained
+
+### 0. Native HTML Forms (Chapter 0)
+
+**Locations:** [app/native/](app/native/)
+
+Before JavaScript, the only way to send data from a web page to a server was through a native HTML `<form>` element. The browser serialized the fields, constructed the request, navigated to the new URL, and rendered whatever the server sent back — all as full-page server round-trips.
+
+Three sub-pages cover the two native form archetypes and the redirect mechanics that underpin the POST pattern:
+
+| Route | Purpose |
+| --- | --- |
+| `/native/get` | `<form method="get">` — fields encoded into the URL as query params; the Server Component reads `searchParams` to filter the list. No JS, no API call. |
+| `/native/post` | `<form method="post">` → `/api/native-post` Route Handler → **303 See Other** back to the page. Demonstrates the **Post / Redirect / Get (PRG)** pattern that prevents double-submits. |
+| `/native/redirect` | Explains 301 vs 302 vs 303, browser history stack effects, and Next.js `redirect()` / `permanentRedirect()`. |
+
+**Why it matters:** React 19 Server Actions are progressively enhanced forms — understanding native POST/GET makes the `$ACTION_ID` mechanism and the no-JS baseline immediately intuitive.
 
 ### 1. Classic Pattern
 
@@ -117,13 +147,31 @@ See [app/actions/progressive/page.tsx](app/actions/progressive/page.tsx) for a f
 - More distributed architecture across server, browser, and client components
 - Learning curve for developers new to Server Actions
 
-**Note on Cache Components:** This repo keeps Cache Components enabled. The true native no-JavaScript baseline is demonstrated on the HTML form pages under `/native`, while `/actions` shows the React 19 Actions model inside a partially prerendered route.
+**Note on Cache Components:** This repo keeps Cache Components enabled (`cacheComponents: true` in `next.config.mjs`). The true native no-JavaScript baseline is demonstrated on the HTML form pages under `/native`, while `/actions` shows the React 19 Actions model inside a partially prerendered route.
 
 ### 4. Race Condition Handling
 
 **Location:** [app/race/](app/race/)
 
-Side-by-side examples showing how each pattern handles rapid submissions and race conditions.
+Side-by-side examples showing how each pattern handles rapid concurrent submissions:
+
+| Route | Outcome |
+| --- | --- |
+| `/race/classic` | **Broken** — independent fetches with random delays can resolve out of order, corrupting the displayed value |
+| `/race/transition` | **Better** — `useTransition` serializes the transition, queuing rapid clicks, but does not provide a full guarantee |
+| `/race/actions` | **Solved** — the React actions model queues Server Action calls sequentially; the result is always consistent |
+
+### 5. About Page
+
+**Location:** [app/about/page.tsx](app/about/page.tsx)
+
+A statically generated Server Component at `/about` that documents the project from within the app itself. It covers:
+
+- What the project is and the three-group mental model
+- Full annotated site map (all routes and their relationships)
+- Per-page descriptions including rendering strategy and key APIs used
+- Key concepts glossary (PRG, Cache Components, `$ACTION_ID`, `useActionState`, etc.)
+- What the app does _not_ cover (Update/Delete, optimistic UI, URL-as-state, real-time)
 
 ## Running the Project
 
@@ -147,19 +195,20 @@ pnpm dev --turbo
 
 ## Key Takeaways
 
-| Feature                     | Classic | Transition                         | Actions                                 |
-| --------------------------- | ------- | ---------------------------------- | --------------------------------------- |
-| **Requires JavaScript**     | ✓       | ✓                                  | ◐ Hydrated demo under Cache Components  |
-| **State Ownership**         | Client  | Mostly client                      | Split across server, browser, and React |
-| **Code Complexity**         | High    | Medium                             | Low                                     |
-| **Server Execution**        | ✗       | ✗                                  | ✓                                       |
-| **Race Condition Handling** | Manual  | Manual unless you add your own fix | Queued by the action model              |
+| Feature | Native HTML | Classic | Transition | Actions |
+| --- | --- | --- | --- | --- |
+| **Requires JavaScript** | ✗ | ✓ | ✓ | ◐ Hydrated demo under Cache Components |
+| **State Ownership** | Browser / Server | Client | Mostly client | Split: server, browser, React |
+| **Code Complexity** | Minimal | High | Medium | Low |
+| **Server Execution** | ✓ (Route Handler) | ✗ | ✗ | ✓ |
+| **Race Condition Handling** | N/A (full-page) | Manual | Better (serialized) | Queued by the action model |
+| **Progressive Enhancement** | ✓ by definition | ✗ | ✗ | ✓ via `$ACTION_ID` |
 
 ## Technologies
 
-- **Next.js 15+** - React framework for production
-- **React 18+** - UI library with hooks support
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first styling
-- **shadcn/ui** - Accessible UI components
-- **Turbopack** - Fast development builds
+- **Next.js 16 (App Router)** — Server Components, Server Actions, Cache Components, Route Handlers
+- **React 19** — `useActionState`, `useFormStatus`, `useTransition`
+- **TypeScript** — type safety throughout
+- **Tailwind CSS v4** — utility-first styling
+- **shadcn/ui** — accessible, composable UI components
+- **Turbopack** — fast development builds (`pnpm dev --turbo`)
