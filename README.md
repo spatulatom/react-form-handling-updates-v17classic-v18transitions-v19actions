@@ -62,7 +62,7 @@ app/
 │   ├── layout.tsx                    # Shared nav for all /race routes
 │   ├── page.tsx                      # Race condition overview
 │   ├── classic/page.tsx              # Classic — broken (responses arrive out of order)
-│   ├── transition/page.tsx           # Transition — better (serialised but not immune)
+│   ├── transition/page.tsx           # Transition — better (serialized but not immune)
 │   └── actions/page.tsx              # Actions — solved (queued by the actions model)
 └── api/
     └── native-post/route.ts          # Route Handler backing the /native/post demo
@@ -76,7 +76,7 @@ components/
 
 **Locations:** [app/native/](app/native/)
 
-Before JavaScript, the only way to send data from a web page to a server was through a native HTML `<form>` element. The browser serialised the fields, constructed the request, navigated to the new URL, and rendered whatever the server sent back — all as full-page server round-trips.
+Before JavaScript, the only way to send data from a web page to a server was through a native HTML `<form>` element. The browser serialized the fields, constructed the request, navigated to the new URL, and rendered whatever the server sent back — all as full-page server round-trips.
 
 Three sub-pages cover the two native form archetypes and the redirect mechanics that underpin the POST pattern:
 
@@ -158,7 +158,7 @@ Side-by-side examples showing how each pattern handles rapid concurrent submissi
 | Route | Outcome |
 | --- | --- |
 | `/race/classic` | **Broken** — independent fetches with random delays can resolve out of order, corrupting the displayed value |
-| `/race/transition` | **Better** — `useTransition` serialises the transition, queuing rapid clicks, but does not provide a full guarantee |
+| `/race/transition` | **Better** — `useTransition` serializes the transition, queuing rapid clicks, but does not provide a full guarantee |
 | `/race/actions` | **Solved** — the React actions model queues Server Action calls sequentially; the result is always consistent |
 
 ### 5. About Page
@@ -201,7 +201,7 @@ pnpm dev --turbo
 | **State Ownership** | Browser / Server | Client | Mostly client | Split: server, browser, React |
 | **Code Complexity** | Minimal | High | Medium | Low |
 | **Server Execution** | ✓ (Route Handler) | ✗ | ✗ | ✓ |
-| **Race Condition Handling** | N/A (full-page) | Manual | Better (serialised) | Queued by the action model |
+| **Race Condition Handling** | N/A (full-page) | Manual | Better (serialized) | Queued by the action model |
 | **Progressive Enhancement** | ✓ by definition | ✗ | ✗ | ✓ via `$ACTION_ID` |
 
 ## Technologies

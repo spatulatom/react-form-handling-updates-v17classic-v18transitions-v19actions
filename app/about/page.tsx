@@ -161,7 +161,7 @@ export default function AboutPage() {
               badge="Server Component"
               badgeColor="stone"
             >
-              Introduces the pre-JavaScript web model. Explains how the browser itself serialises form fields,
+              Introduces the pre-JavaScript web model. Explains how the browser itself serializes form fields,
               constructs the request, and navigates to the server response — no JavaScript involved. Navigation links
               lead to the three sub-routes below.
             </RouteCard>
@@ -314,7 +314,7 @@ export default function AboutPage() {
               badge="Client Component"
               badgeColor="yellow"
             >
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">useTransition</code> serialises the transition,
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">useTransition</code> serializes the transition,
               so rapid clicks are queued rather than fired in parallel. This mitigates but does not fully eliminate the
               race condition.
             </RouteCard>
