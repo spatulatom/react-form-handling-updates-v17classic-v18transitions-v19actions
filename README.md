@@ -29,10 +29,10 @@ The main lesson is not that those groups disappear. It is that newer React and N
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
 # Start the development server
-pnpm dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to explore the patterns.
@@ -61,9 +61,9 @@ app/
 ├── race/                             # Race condition examples
 │   ├── layout.tsx                    # Shared nav for all /race routes
 │   ├── page.tsx                      # Race condition overview
-│   ├── classic/page.tsx              # Classic — broken (responses arrive out of order)
-│   ├── transition/page.tsx           # Transition — better (serialized but not immune)
-│   └── actions/page.tsx              # Actions — solved (queued by the actions model)
+│   ├── classic/page.tsx              # Classic — broken (stale closure, out-of-order responses)
+│   ├── transition/page.tsx           # Transition — broken unless a manual requestId/ref fix is added
+│   └── actions/page.tsx              # Actions — solved (useActionState queues calls)
 └── api/
     └── native-post/route.ts          # Route Handler backing the /native/post demo
 components/
@@ -153,13 +153,13 @@ See [app/actions/progressive/page.tsx](app/actions/progressive/page.tsx) for a f
 
 **Location:** [app/race/](app/race/)
 
-Side-by-side examples showing how each pattern handles rapid concurrent submissions:
+Side-by-side counter demos showing how each pattern handles rapid clicks. Each click calls a fake async increment with a random 200–800 ms delay. All three pages are client components, so no server is involved.
 
 | Route | Outcome |
 | --- | --- |
-| `/race/classic` | **Broken** — independent fetches with random delays can resolve out of order, corrupting the displayed value |
-| `/race/transition` | **Better** — `useTransition` serializes the transition, queuing rapid clicks, but does not provide a full guarantee |
-| `/race/actions` | **Solved** — the React actions model queues Server Action calls sequentially; the result is always consistent |
+| `/race/classic` | **Broken** — each call captures a stale `count` and responses can resolve out of order, so the displayed value falls behind the click count |
+| `/race/transition` | **Only fixed manually** — `useTransition` gives you `isPending` but does **not** queue or order your async work. A toggle compares the unfixed version with a manual `requestId` + ref fix that ignores stale responses |
+| `/race/actions` | **Solved** — `useActionState` queues calls sequentially and passes each one the previous state, so the count always equals the click count |
 
 ### 5. About Page
 
@@ -176,20 +176,20 @@ A statically generated Server Component at `/about` that documents the project f
 ## Running the Project
 
 ```bash
-# Development
-pnpm dev
+# Development (Turbopack is the default bundler in Next.js 16)
+npm run dev
 
 # Production build
-pnpm build
-pnpm start
+npm run build
+npm start
 
-# Run with Turbopack (faster builds)
-pnpm dev --turbo
+# Lint
+npm run lint
 ```
 
 ## Learning Resources
 
-- [Next.js Server Actions Documentation](https://nextjs.org/docs/app/building-your-application/data-mutation/server-actions)
+- [Next.js: Mutating Data (Server Functions)](https://nextjs.org/docs/app/getting-started/mutating-data)
 - [React useTransition Hook](https://react.dev/reference/react/useTransition)
 - [Progressive Enhancement](https://developer.mozilla.org/en-US/docs/Glossary/Progressive_enhancement)
 
@@ -201,7 +201,7 @@ pnpm dev --turbo
 | **State Ownership** | Browser / Server | Client | Mostly client | Split: server, browser, React |
 | **Code Complexity** | Minimal | High | Medium | Low |
 | **Server Execution** | ✓ (Route Handler) | ✗ | ✗ | ✓ |
-| **Race Condition Handling** | N/A (full-page) | Manual | Better (serialized) | Queued by the action model |
+| **Race Condition Handling** | N/A (full-page) | Manual | Still manual (`isPending` only) | Queued by `useActionState` |
 | **Progressive Enhancement** | ✓ by definition | ✗ | ✗ | ✓ via `$ACTION_ID` |
 
 ## Technologies
@@ -211,4 +211,4 @@ pnpm dev --turbo
 - **TypeScript** — type safety throughout
 - **Tailwind CSS v4** — utility-first styling
 - **shadcn/ui** — accessible, composable UI components
-- **Turbopack** — fast development builds (`pnpm dev --turbo`)
+- **Turbopack** — default bundler for `next dev` and `next build` in Next.js 16

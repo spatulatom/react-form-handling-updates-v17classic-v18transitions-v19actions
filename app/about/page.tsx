@@ -112,7 +112,7 @@ export default function AboutPage() {
 │
 ├── /race                      ← Race conditions overview
 │   ├── /race/classic          ← Race condition demo — Classic (broken)
-│   ├── /race/transition       ← Race condition demo — Transition (better)
+│   ├── /race/transition       ← Race condition demo — Transition (manual fix)
 │   └── /race/actions          ← Race condition demo — Actions (solved)
 │
 └── /api/native-post           ← Route Handler backing the native POST demo`}</pre>
@@ -128,7 +128,7 @@ export default function AboutPage() {
             href="/"
             label="/"
             title="Landing page — Pattern overview"
-            badge="Server Component"
+            badge="Client Component"
             badgeColor="green"
           >
             The entry point. Introduces the three-group mental model, explains why the evolution matters, and links to
@@ -301,33 +301,35 @@ export default function AboutPage() {
               badge="Client Component"
               badgeColor="red"
             >
-              Each click fires an independent{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">fetch</code> with a random delay, so an earlier
-              request can resolve after a later one and overwrite the correct value. The displayed count is
-              non-deterministic.
+              Each click calls a fake async increment with a random 200–800 ms delay, capturing a stale{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">count</code> from its closure. Responses can
+              resolve out of order and overwrite each other, so the displayed count falls behind the click count.
             </RouteCard>
 
             <RouteCard
               href="/race/transition"
               label="/race/transition"
-              title="Transition — improved but not immune"
+              title="Transition — only fixed manually"
               badge="Client Component"
               badgeColor="yellow"
             >
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">useTransition</code> serializes the transition,
-              so rapid clicks are queued rather than fired in parallel. This mitigates but does not fully eliminate the
-              race condition.
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">useTransition</code> gives you{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">isPending</code> but does <strong>not</strong>{" "}
+              queue or order your async work. A toggle compares the unfixed version (same bug as Classic) with a manual{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">requestId</code> + ref fix that ignores stale
+              responses.
             </RouteCard>
 
             <RouteCard
               href="/race/actions"
               label="/race/actions"
               title="Actions — race condition solved"
-              badge="Server Component + Client Island"
+              badge="Client Component"
               badgeColor="green"
             >
-              Server Actions are queued by the React actions model. Concurrent submissions are processed sequentially
-              server-side, so the count is always consistent regardless of click speed.
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">useActionState</code> queues calls and runs them
+              one at a time, passing each the previous state. The action here is a plain client-side async function
+              (not a Server Action), so the count always equals the click count regardless of click speed.
             </RouteCard>
           </div>
 
@@ -378,7 +380,7 @@ export default function AboutPage() {
               },
               {
                 term: "useActionState",
-                def: "React 19 hook. Wraps a Server Action and returns [state, dispatch, isPending]. The state is the value last returned by the action, e.g. a validation error object.",
+                def: "React 19 hook. Wraps an action function (a Server Action or a plain async function) and returns [state, dispatch, isPending]. Calls are queued in order, and the state is the value last returned by the action, e.g. a validation error object.",
               },
               {
                 term: "useFormStatus",
